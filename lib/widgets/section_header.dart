@@ -17,12 +17,20 @@ class SectionHeader extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text('$title', style: textTheme.headline1),
-        SizedBox(height: kDefaultPadding / 2),
+        Text(
+          '$title',
+          style: textTheme.headline1,
+          overflow: TextOverflow.ellipsis,
+        ),
         (subtitle != null)
-            ? Text('$subtitle',
-                style: textTheme.bodyText2
-                    ?.copyWith(color: kFontBlack.withOpacity(0.5)))
+            ? Column(
+                children: [
+                  SizedBox(height: kDefaultPadding / 2),
+                  Text('$subtitle',
+                      style: textTheme.bodyText2
+                          ?.copyWith(color: kFontBlack.withOpacity(0.5)))
+                ],
+              )
             : Container(),
       ],
     );

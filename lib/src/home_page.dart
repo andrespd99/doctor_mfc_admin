@@ -1,8 +1,11 @@
 import 'package:doctor_mfc_admin/constants.dart';
+import 'package:doctor_mfc_admin/services/page_change_service.dart';
+import 'package:doctor_mfc_admin/src/manage_systems_page.dart';
 import 'package:doctor_mfc_admin/widgets/body_template.dart';
 import 'package:doctor_mfc_admin/widgets/green_elevated_button.dart';
 import 'package:doctor_mfc_admin/widgets/section_header.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 class HomePage extends StatefulWidget {
   HomePage({Key? key}) : super(key: key);
@@ -34,7 +37,9 @@ class _HomePageState extends State<HomePage> {
       spacing: kDefaultPadding,
       children: [
         shortcutButton(
-          onPressed: () {},
+          onPressed: () =>
+              Provider.of<PageChangeService>(context, listen: false)
+                  .changePage(ManageSystemsPage()),
           title: 'Manage systems',
         ),
         shortcutButton(

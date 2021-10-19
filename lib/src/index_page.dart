@@ -9,16 +9,16 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-class BaseLayout extends StatefulWidget {
-  BaseLayout({
+class IndexPage extends StatefulWidget {
+  IndexPage({
     Key? key,
   }) : super(key: key);
 
   @override
-  _BaseLayoutState createState() => _BaseLayoutState();
+  _IndexPageState createState() => _IndexPageState();
 }
 
-class _BaseLayoutState extends State<BaseLayout>
+class _IndexPageState extends State<IndexPage>
     with SingleTickerProviderStateMixin {
   // Drawer items.
   final Map<int, DrawerItem> itemsMap = Map.from(
@@ -35,7 +35,7 @@ class _BaseLayoutState extends State<BaseLayout>
   );
 
   // Selected drawer item index.
-  late int selectedIndex = 0;
+  late int selectedIndex = 1;
 
   // Used to keep drawer state.
   late bool drawerIsOpen = false;
@@ -43,7 +43,7 @@ class _BaseLayoutState extends State<BaseLayout>
   Duration drawerDuration = Duration(milliseconds: 300);
 
 /* --------------------------- Drawer dimensions. --------------------------- */
-  double drawerWidth = 240.0;
+  double drawerWidth = 260.0;
   double horizontalPadding = kDefaultPadding / 3;
   double drawerIconSize = 28;
 
@@ -254,8 +254,6 @@ class _BaseLayoutState extends State<BaseLayout>
       animationController.reverse();
     else
       animationController.forward();
-
-    print('Drawer is open: $drawerIsOpen');
 
     setState(() {
       drawerIsOpen = !drawerIsOpen;
