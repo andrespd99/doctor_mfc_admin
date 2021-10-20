@@ -3,6 +3,7 @@ import 'package:doctor_mfc_admin/models/solution.dart';
 import 'package:doctor_mfc_admin/widgets/base_input.dart';
 import 'package:doctor_mfc_admin/widgets/custom_alert_dialog.dart';
 import 'package:flutter/material.dart';
+import 'package:uuid/uuid.dart';
 
 class AddSolutionDialog extends StatefulWidget {
   final Function(Solution) callback;
@@ -139,6 +140,7 @@ class _AddSolutionDialogState extends State<AddSolutionDialog> {
   /// When on finish, returns a Solution object and goes back to last page.
   void onFinish() {
     widget.callback(new Solution(
+      id: Uuid().v4(),
       description: descriptionController.text,
       instructions: instructionsController.text,
       guideLink: (videoLinkController.text.isNotEmpty)

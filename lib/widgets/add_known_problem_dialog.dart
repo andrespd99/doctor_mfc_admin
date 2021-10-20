@@ -7,6 +7,7 @@ import 'package:doctor_mfc_admin/widgets/object_elevated_button.dart';
 import 'package:doctor_mfc_admin/widgets/section_subheader_with_add_button.dart';
 
 import 'package:flutter/material.dart';
+import 'package:uuid/uuid.dart';
 
 class AddKnownProblemDialog extends StatefulWidget {
   final Function(Problem) callback;
@@ -366,6 +367,7 @@ class _AddKnownProblemDialogState extends State<AddKnownProblemDialog> {
 
   void onFinish() {
     widget.callback(Problem(
+      id: Uuid().v4(),
       description: descriptionController.text,
       keywords: keywords,
       question: questionController.text,

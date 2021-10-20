@@ -69,6 +69,7 @@ class _LoginPageState extends State<LoginPage> {
             style: ElevatedButton.styleFrom(
               padding: EdgeInsets.symmetric(
                   horizontal: kDefaultPadding * 1.5, vertical: kDefaultPadding),
+              primary: kAccentColor,
             ),
           ),
         ],

@@ -121,6 +121,32 @@ class _IndexPageState extends State<IndexPage>
     );
   }
 
+  // Widget bodyBuilder() {
+  //   double bodyWidthDrawerClosed =
+  //       MediaQuery.of(context).size.width - closedDrawerWidth();
+
+  //   double bodyWidthDrawerOpen =
+  //       MediaQuery.of(context).size.width - drawerWidth;
+
+  //   return AnimatedContainer(
+  //     duration: drawerDuration,
+  //     curve: Curves.easeInOutQuart,
+  //     width: (drawerIsOpen) ? bodyWidthDrawerOpen : bodyWidthDrawerClosed,
+  //     child: StreamBuilder<Widget>(
+  //       stream: Provider.of<PageChangeService>(context).currentPage,
+  //       builder: (BuildContext context, AsyncSnapshot<Widget> snapshot) {
+  //         if (snapshot.hasData) {
+  //           Widget body = snapshot.data!;
+
+  //           return body;
+  //         } else {
+  //           return CustomProgressIndicator();
+  //         }
+  //       },
+  //     ),
+  //   );
+  // }
+
   AnimatedBuilder drawerBuilder() {
     return AnimatedBuilder(
       animation: animation,

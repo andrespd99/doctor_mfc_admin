@@ -7,6 +7,7 @@ import 'package:doctor_mfc_admin/widgets/custom_alert_dialog.dart';
 import 'package:doctor_mfc_admin/widgets/object_elevated_button.dart';
 import 'package:doctor_mfc_admin/widgets/section_subheader_with_add_button.dart';
 import 'package:flutter/material.dart';
+import 'package:uuid/uuid.dart';
 
 class AddComponentDialog extends StatefulWidget {
   final String systemName;
@@ -119,6 +120,7 @@ class _AddComponentDialogState extends State<AddComponentDialog> {
   void onFinish() {
     widget.callback(
       Component(
+        id: Uuid().v4(),
         description: descriptionController.text,
         problems: problems,
       ),

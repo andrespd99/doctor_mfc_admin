@@ -1,7 +1,7 @@
 import 'package:doctor_mfc_admin/models/user_response.dart';
 
 class Problem {
-  final String? id;
+  final String id;
   final String description;
   final String question;
   final List<String> keywords;
@@ -9,7 +9,7 @@ class Problem {
   // final Object guidance;
 
   Problem({
-    this.id,
+    required this.id,
     required this.description,
     required this.question,
     required this.keywords,
@@ -30,12 +30,15 @@ class Problem {
     );
   }
 
-  Map<String, dynamic> toMap(List<String> responsesIds) {
+  Map<String, dynamic> toMap() {
     return {
       'description': description,
       'question': question,
       'keywords': keywords,
-      'userResponses': responsesIds,
+      'userResponses': responsesIds ?? [] as List<String>,
     };
   }
+
+  List<String>? get responsesIds =>
+      userResponses?.map((response) => response.id).toList();
 }

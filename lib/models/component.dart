@@ -1,12 +1,12 @@
 import 'package:doctor_mfc_admin/models/problem.dart';
 
 class Component {
-  final String? id;
+  final String id;
   final String description;
   final List<Problem>? problems;
 
   Component({
-    this.id,
+    required this.id,
     required this.description,
     this.problems,
   });
@@ -23,10 +23,13 @@ class Component {
     );
   }
 
-  Map<String, dynamic> toMap(List<String> problemsIds) {
+  Map<String, dynamic> toMap() {
     return {
       'description': description,
-      'problems': problemsIds,
+      'problems': problemsIds ?? [] as List<String>,
     };
   }
+
+  List<String>? get problemsIds =>
+      problems?.map((problem) => problem.id).toList();
 }

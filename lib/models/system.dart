@@ -1,18 +1,20 @@
 import 'package:doctor_mfc_admin/models/component.dart';
+import 'package:doctor_mfc_admin/models/problem.dart';
 import 'package:doctor_mfc_admin/models/solution.dart';
 import 'package:doctor_mfc_admin/models/system_type.dart';
+import 'package:doctor_mfc_admin/models/user_response.dart';
 
 class System {
   final String? id;
   final String model;
-  final List<SystemType>? types;
+  final String type;
   final String brand;
   final List<Component>? components;
 
   System({
     this.id,
     required this.model,
-    this.types,
+    required this.type,
     required this.brand,
     this.components,
   });
@@ -25,7 +27,7 @@ class System {
     return System(
       id: id,
       model: data['description'],
-      types: List.from(data['types']),
+      type: data['type'],
       brand: data['brand'],
       components: components,
     );
@@ -55,14 +57,38 @@ class System {
     return counter;
   }
 
-  Map<String, dynamic> toMap(List componentsIds) {
-    var result = {
+  Map<String, dynamic> toMap() {
+    return {
       'description': model,
-      //TODO: 'types': typesIds,
+      'type': type,
       'brand': brand,
-      'components': componentsIds,
+      'components': componentsIds ?? [] as List<String>,
     };
+  }
 
-    return result;
+/* --------------------------------- Getters -------------------------------- */
+
+  List<String>? get componentsIds =>
+      components?.map((component) => component.id).toList();
+
+  List<Problem> get knownProblems {
+    List<Problem> knownProblems = [];
+    components?.forEach(
+        (component) => knownProblems.addAll(component.problems ?? []));
+    return knownProblems;
+  }
+
+  List<UserResponse> get userResponses {
+    List<UserResponse> userResponses = [];
+    knownProblems.forEach(
+        (problem) => userResponses.addAll(problem.userResponses ?? []));
+    return userResponses;
+  }
+
+  List<Solution> get solutions {
+    List<Solution> solutions = [];
+    userResponses
+        .forEach((response) => solutions.addAll(response.solutions ?? []));
+    return solutions;
   }
 }

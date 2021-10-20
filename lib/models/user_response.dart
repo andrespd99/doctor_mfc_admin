@@ -1,13 +1,13 @@
 import 'package:doctor_mfc_admin/models/solution.dart';
 
 class UserResponse {
-  final String? id;
+  final String id;
   final String description;
   final bool isOkResponse;
   final List<Solution>? solutions;
 
   UserResponse({
-    this.id,
+    required this.id,
     required this.description,
     required this.isOkResponse,
     this.solutions,
@@ -26,11 +26,14 @@ class UserResponse {
     );
   }
 
-  Map<String, dynamic> toMap(List<String> solutionsIds) {
+  Map<String, dynamic> toMap() {
     return {
       'description': description,
       'isOkResponse': isOkResponse,
-      'solutions': solutionsIds,
+      'solutions': solutionsIds ?? [] as List<String>,
     };
   }
+
+  List<String>? get solutionsIds =>
+      solutions?.map((solution) => solution.id).toList();
 }

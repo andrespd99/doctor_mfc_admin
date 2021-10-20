@@ -1,9 +1,10 @@
 import 'package:doctor_mfc_admin/constants.dart';
 import 'package:doctor_mfc_admin/services/page_change_service.dart';
-import 'package:doctor_mfc_admin/services/test_systems_service.dart';
+import 'package:doctor_mfc_admin/services/test/test_systems_service.dart';
 
 import 'package:doctor_mfc_admin/src/index_page.dart';
 import 'package:doctor_mfc_admin/src/login_page.dart';
+import 'package:doctor_mfc_admin/src/manage_systems_page.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -24,7 +25,6 @@ class MyApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         Provider<PageChangeService>(create: (_) => PageChangeService()),
-        Provider<TestSystemsService>(create: (_) => TestSystemsService()),
       ],
       child: MaterialApp(
         title: 'Doctor MFC - ADMIN',
@@ -32,6 +32,7 @@ class MyApp extends StatelessWidget {
         home: LoginPage(),
         routes: {
           'home': (context) => IndexPage(),
+          'manageSystems': (context) => ManageSystemsPage(),
         },
         builder: (context, child) => Material(child: child),
       ),
@@ -41,7 +42,7 @@ class MyApp extends StatelessWidget {
   ThemeData theme() {
     return ThemeData(
       visualDensity: VisualDensity.compact,
-      accentColor: kAccentColor,
+      accentColor: kPrimaryColor,
       focusColor: kPrimaryColor,
       primaryColor: kPrimaryColor,
       textButtonTheme: TextButtonThemeData(
@@ -54,7 +55,7 @@ class MyApp extends StatelessWidget {
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          primary: kAccentColor,
+          primary: kPrimaryColor.withOpacity(0.8),
           // shadowColor: kAccentColor,
           textStyle: TextStyle(
             fontWeight: FontWeight.bold,

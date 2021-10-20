@@ -37,6 +37,8 @@ dependencies:
   firebase_core_web: ^1.1.0
   cloud_firestore: ^2.5.3
   firebase_core: ^1.7.0
+  uuid: ^3.0.5
+  rxdart: ^0.27.2
 
 dev_dependencies:
   flutter_test:

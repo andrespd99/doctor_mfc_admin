@@ -1,12 +1,12 @@
 class Solution {
-  final String? id;
+  final String id;
   final String description;
   final String instructions;
   final String? imageUrl;
   final String? guideLink;
 
   Solution({
-    this.id,
+    required this.id,
     required this.description,
     required this.instructions,
     this.imageUrl,

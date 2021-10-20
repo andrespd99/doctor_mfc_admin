@@ -8,6 +8,7 @@ import 'package:doctor_mfc_admin/widgets/object_elevated_button.dart';
 import 'package:doctor_mfc_admin/widgets/section_subheader_with_add_button.dart';
 import 'package:doctor_mfc_admin/widgets/text_button_light_bg.dart';
 import 'package:flutter/material.dart';
+import 'package:uuid/uuid.dart';
 
 class AddUserResponseDialog extends StatefulWidget {
   final Function(UserResponse) callback;
@@ -163,6 +164,7 @@ class _AddUserResponseDialogState extends State<AddUserResponseDialog> {
 
   void onFinish() {
     widget.callback(UserResponse(
+      id: Uuid().v4(),
       description: descriptionController.text,
       isOkResponse: isOkResponse,
       solutions: solutions,

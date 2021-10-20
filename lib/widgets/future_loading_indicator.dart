@@ -7,11 +7,21 @@ Future futureLoadingIndicator(BuildContext context, Future future) {
   return showDialog(
     context: context,
     builder: (context) {
-      future
-          .then((_) => Navigator.pop(context))
-          .timeout(Duration(seconds: 15),
-              onTimeout: () => onErrorDialog(context, 'Request timeout'))
-          .onError((error, stackTrace) => onErrorDialog(context));
+      future.then((_) => Navigator.pop(context)).timeout(Duration(seconds: 3),
+          onTimeout: () {
+        Navigator.pop(context);
+        onErrorDialog(
+          context: context,
+          errorMessage: 'Request timeout',
+          onTryAgainFuture: future,
+        );
+      }).onError(
+        (error, stackTrace) => onErrorDialog(
+          context: context,
+          errorMessage: 'An unexpected error has ocurred',
+          onTryAgainFuture: future,
+        ),
+      );
 
       return Center(
         child: Container(
@@ -23,10 +33,12 @@ Future futureLoadingIndicator(BuildContext context, Future future) {
           ),
           child: Center(
             child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 CircularProgressIndicator(color: kSecondaryLightColor),
+                SizedBox(height: kDefaultPadding / 2),
                 Text(
-                  'Loading...',
+                  'Loading',
                   style: Theme.of(context)
                       .textTheme
                       .caption
@@ -41,18 +53,31 @@ Future futureLoadingIndicator(BuildContext context, Future future) {
   );
 }
 
-void onErrorDialog(BuildContext context, [String? errorMessage]) {
+void onErrorDialog({
+  required BuildContext context,
+  String? errorMessage,
+  Future? onTryAgainFuture,
+}) {
   showDialog(
       context: context,
       builder: (context) {
-        return AlertDialog(
-          title: Text(errorMessage ?? 'An error has ocurred'),
-          content: Text('Try again?'),
+        return CupertinoAlertDialog(
+          title: Text('Error'),
+          content: Text(errorMessage ?? 'An error has ocurred'),
           actions: [
             CupertinoDialogAction(
               child: Text('Cancel'),
+              onPressed: () => Navigator.pop(context),
             ),
-            CupertinoDialogAction(child: Text('Retry'), isDefaultAction: true),
+            (onTryAgainFuture != null)
+                ? CupertinoDialogAction(
+                    child: Text('Try again'),
+                    isDefaultAction: true,
+                    onPressed: () {
+                      Navigator.pop(context);
+                      futureLoadingIndicator(context, onTryAgainFuture);
+                    })
+                : Container(),
           ],
         );
       });

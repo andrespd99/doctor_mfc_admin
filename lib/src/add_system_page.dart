@@ -2,10 +2,13 @@ import 'package:doctor_mfc_admin/constants.dart';
 import 'package:doctor_mfc_admin/models/component.dart';
 import 'package:doctor_mfc_admin/models/problem.dart';
 import 'package:doctor_mfc_admin/models/system.dart';
-import 'package:doctor_mfc_admin/services/new_systems_service.dart';
+import 'package:doctor_mfc_admin/services/global_values.dart';
+import 'package:doctor_mfc_admin/services/systems_service.dart';
 import 'package:doctor_mfc_admin/widgets/add_component_dialog.dart';
+import 'package:doctor_mfc_admin/widgets/base_input.dart';
 
 import 'package:doctor_mfc_admin/widgets/body_template.dart';
+import 'package:doctor_mfc_admin/widgets/custom_loading_indicator.dart';
 import 'package:doctor_mfc_admin/widgets/future_loading_indicator.dart';
 import 'package:doctor_mfc_admin/widgets/object_elevated_button.dart';
 import 'package:doctor_mfc_admin/widgets/section_subheader_with_add_button.dart';
@@ -32,6 +35,8 @@ class _AddSystemPageState extends State<AddSystemPage> {
 
   @override
   Widget build(BuildContext context) {
+    addListeners();
+
     return BodyTemplate(
       title: 'Add new system',
       body: [
@@ -54,16 +59,21 @@ class _AddSystemPageState extends State<AddSystemPage> {
     return Center(
       child: ElevatedButton(
         child: Text('Create system'),
-        onPressed: () => futureLoadingIndicator(
-          context,
-          SystemsService().addSystem(
-            System(
-              model: modelController.text,
-              brand: brandController.text,
-              components: components,
-            ),
-          ),
-        ).then((_) => cleanEntries()),
+        onPressed: (canFinish())
+            ? () => futureLoadingIndicator(
+                  context,
+                  SystemsService().addSystem(
+                    System(
+                      model: modelController.text,
+                      brand: brandController.text,
+                      type: typeController.text,
+                      components: components,
+                    ),
+                  ),
+                ).then((_) {
+                  onComplete();
+                })
+            : null,
       ),
     );
   }
@@ -113,25 +123,10 @@ class _AddSystemPageState extends State<AddSystemPage> {
 
   Widget attributeInput(
       {required String title, required TextEditingController controller}) {
-    return Container(
-      constraints: BoxConstraints(
-        minWidth: 200,
-        maxWidth: 300,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            '$title',
-            style: Theme.of(context).textTheme.headline6,
-          ),
-          SizedBox(height: kDefaultPadding / 2),
-          TextField(
-            controller: controller,
-          ),
-        ],
-      ),
+    return BaseInput(
+      title: title,
+      controller: controller,
+      width: 300,
     );
   }
 
@@ -172,14 +167,33 @@ class _AddSystemPageState extends State<AddSystemPage> {
     setState(() {});
   }
 
-  void showSuccessSnackbar() {}
-
   void cleanEntries() {
     typeController.clear();
     modelController.clear();
     brandController.clear();
 
     components = [];
+  }
+
+  void onComplete() {
+    cleanEntries();
+
+    setState(() {});
+  }
+
+  bool canFinish() {
+    if (modelController.text.isNotEmpty &&
+        brandController.text.isNotEmpty &&
+        typeController.text.isNotEmpty) {
+      return true;
+    } else
+      return false;
+  }
+
+  void addListeners() {
+    modelController.addListener(() => setState(() {}));
+    brandController.addListener(() => setState(() {}));
+    typeController.addListener(() => setState(() {}));
   }
 
   // TODO: Make dropdown
