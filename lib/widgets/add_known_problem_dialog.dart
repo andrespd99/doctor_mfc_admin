@@ -4,7 +4,9 @@ import 'package:doctor_mfc_admin/models/user_response.dart';
 import 'package:doctor_mfc_admin/widgets/add_user_response_dialog.dart';
 import 'package:doctor_mfc_admin/widgets/custom_alert_dialog.dart';
 import 'package:doctor_mfc_admin/widgets/object_elevated_button.dart';
+import 'package:doctor_mfc_admin/widgets/section_subheader.dart';
 import 'package:doctor_mfc_admin/widgets/section_subheader_with_add_button.dart';
+import 'package:doctor_mfc_admin/widgets/user_response_elevated_button.dart';
 
 import 'package:flutter/material.dart';
 import 'package:uuid/uuid.dart';
@@ -12,9 +14,11 @@ import 'package:uuid/uuid.dart';
 class AddKnownProblemDialog extends StatefulWidget {
   final Function(Problem) callback;
   final Problem? problem;
+  final String subtitle;
 
   const AddKnownProblemDialog({
     required this.callback,
+    required this.subtitle,
     this.problem,
     Key? key,
   }) : super(key: key);
@@ -37,17 +41,26 @@ class _AddKnownProblemDialogState extends State<AddKnownProblemDialog> {
 
   List<UserResponse> userResponses = [];
 
-  // Getters
+  /// Whether this question is a yes/no (binary) question or a multiple options
+  /// question.
+  bool? isBinaryQuestion;
+
+  String get question => questionController.text;
+
   bool get isUpdatingProblem => widget.problem != null;
   bool get keywordIsEmpty => keywordController.text.isEmpty;
+
   bool get canFinish {
-    if (descriptionController.text.isNotEmpty &&
-        questionController.text.isNotEmpty &&
-        userResponses.length >= 2) {
+    if (fieldsAreNotEmpty && hasValidUserResponses()) {
       return true;
     } else
       return false;
   }
+
+  /// Returns true if description and question fields are NOT empty.
+  bool get fieldsAreNotEmpty =>
+      descriptionController.text.isNotEmpty &&
+      questionController.text.isNotEmpty;
 
   @override
   void initState() {
@@ -56,7 +69,7 @@ class _AddKnownProblemDialogState extends State<AddKnownProblemDialog> {
       descriptionController.text = problem.description;
       questionController.text = problem.question;
       keywords = problem.keywords;
-      userResponses = problem.userResponses ?? [];
+      userResponses = problem.userResponses;
     }
     super.initState();
   }
@@ -67,6 +80,7 @@ class _AddKnownProblemDialogState extends State<AddKnownProblemDialog> {
 
     return CustomAlertDialog(
       title: 'Add known problem',
+      subtitle: widget.subtitle,
       body: [
         problemDescriptionInput(),
         SizedBox(height: kDefaultPadding),
@@ -74,11 +88,43 @@ class _AddKnownProblemDialogState extends State<AddKnownProblemDialog> {
         SizedBox(height: kDefaultPadding),
         keywordsSection(),
         SizedBox(height: kDefaultPadding),
-        userResponsesSection(),
+        // First, user has to select what type of question this is
+        // (in askQuestionTypeSection()), then the user responses section is shown.
+        (isBinaryQuestion == null)
+            ? askQuestionTypeSection()
+            : userResponsesSection(),
       ],
       finishButtonTitle: isUpdatingProblem ? 'Update problem' : 'Add problem',
       onFinish: () => onFinish(),
       isButtonEnabled: canFinish,
+    );
+  }
+
+  Column askQuestionTypeSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SectionSubheader('User responses'),
+        SizedBox(height: kDefaultPadding / 4),
+        Text('Is this a yes/no question or a multiple options question?'),
+        ButtonBar(
+          alignment: MainAxisAlignment.start,
+          children: [
+            ElevatedButton(
+              onPressed: (fieldsAreNotEmpty)
+                  ? () => setState(() => setAsBinaryQuestion())
+                  : null,
+              child: Text('Yes/no question'),
+            ),
+            ElevatedButton(
+              onPressed: (fieldsAreNotEmpty)
+                  ? () => setState(() => setAsMultiOptionQuestion())
+                  : null,
+              child: Text('Multiple options question'),
+            ),
+          ],
+        )
+      ],
     );
   }
 
@@ -88,7 +134,8 @@ class _AddKnownProblemDialogState extends State<AddKnownProblemDialog> {
       children: [
         SectionSubheaderWithAddButton(
           title: 'User responses',
-          onPressed: navigateToResponseCreation,
+          onPressed:
+              (isBinaryQuestion! == false) ? navigateToResponseCreation : null,
           addButtonText: 'Add responses',
         ),
         SizedBox(height: kDefaultPadding / 4),
@@ -98,8 +145,8 @@ class _AddKnownProblemDialogState extends State<AddKnownProblemDialog> {
             shrinkWrap: true,
             scrollDirection: Axis.horizontal,
             itemCount: userResponses.length,
-            itemBuilder: (context, i) => ObjectElevatedButton(
-              title: '${userResponses[i].description}',
+            itemBuilder: (context, i) => UserResponseElevatedButton(
+              response: userResponses[i],
               onPressed: () => navigateToResponseUpdate(
                 userResponse: userResponses[i],
                 index: i,
@@ -306,6 +353,7 @@ class _AddKnownProblemDialogState extends State<AddKnownProblemDialog> {
       DialogRoute(
         context: context,
         builder: (context) => AddUserResponseDialog(
+          question: question,
           callback: (userResponse) => createResponse(userResponse),
         ),
         barrierColor: Colors.transparent,
@@ -322,6 +370,7 @@ class _AddKnownProblemDialogState extends State<AddKnownProblemDialog> {
       DialogRoute(
         context: context,
         builder: (context) => AddUserResponseDialog(
+          question: question,
           callback: (updatedResponse) =>
               updateResponse(userResponse: updatedResponse, index: index),
           userResponse: userResponse,
@@ -375,5 +424,50 @@ class _AddKnownProblemDialogState extends State<AddKnownProblemDialog> {
     ));
 
     Navigator.pop(context);
+  }
+
+  /// Sets the question of this [KnownProblem] as a binary question.
+  void setAsBinaryQuestion() {
+    isBinaryQuestion = true;
+    userResponses.addAll([
+      // Add 'Yes' response.
+      UserResponse(
+        id: Uuid().v4(),
+        isOkResponse: true,
+        description: 'Yes',
+        isEditable: false,
+      ),
+      // Add 'No' response.
+      UserResponse(
+        id: Uuid().v4(),
+        isOkResponse: false,
+        description: 'No',
+        solutions: [],
+      )
+    ]);
+  }
+
+  void setAsMultiOptionQuestion() {
+    isBinaryQuestion = false;
+  }
+
+  /// In order for this question to be valid, there has to be at least one
+  /// working response (okResponse) and one failing response (notOkResponse).
+  ///
+  /// If this criteria is not met, the user can't complete the creation of the
+  /// problem.
+  bool hasValidUserResponses() {
+    bool hasOkResponse = false;
+    bool hasNotOkResponse = false;
+
+    userResponses.forEach((response) {
+      if (response.isOkResponse) {
+        hasOkResponse = true;
+      } else if (!response.isOkResponse) {
+        hasNotOkResponse = true;
+      }
+    });
+
+    return hasOkResponse && hasNotOkResponse;
   }
 }

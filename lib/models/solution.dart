@@ -13,10 +13,9 @@ class Solution {
     this.guideLink,
   });
 
-  factory Solution.fromMap(
-      {required String id, required Map<String, dynamic> data}) {
+  factory Solution.fromMap(Map<String, dynamic> data) {
     return Solution(
-      id: id,
+      id: data['id'],
       description: data['description'],
       instructions: data['instructions'],
       imageUrl: data['imageUrl'],
@@ -26,6 +25,7 @@ class Solution {
 
   Map<String, dynamic> toMap() {
     return {
+      'id': id,
       'description': description,
       'instructions': instructions,
       'imageUrl': imageUrl,

@@ -13,9 +13,11 @@ import 'package:uuid/uuid.dart';
 class AddUserResponseDialog extends StatefulWidget {
   final Function(UserResponse) callback;
   final UserResponse? userResponse;
+  final String question;
 
   AddUserResponseDialog({
     required this.callback,
+    required this.question,
     this.userResponse,
     Key? key,
   }) : super(key: key);
@@ -35,6 +37,9 @@ class _AddUserResponseDialogState extends State<AddUserResponseDialog> {
 
   bool get canFinish => descriptionController.text.isNotEmpty;
 
+  String get answerDescription => descriptionController.text;
+  String get subtitle => '${widget.question} $answerDescription';
+
   @override
   void initState() {
     if (isUpdatingResponse) {
@@ -52,10 +57,11 @@ class _AddUserResponseDialogState extends State<AddUserResponseDialog> {
 
     return CustomAlertDialog(
       title: 'Add user response',
+      subtitle: widget.question,
       body: [
         descriptionInput(),
         SizedBox(height: kDefaultPadding),
-        isOkCeckbox(),
+        isOkCheckbox(),
         SizedBox(height: kDefaultPadding),
         solutionsSection()
       ],
@@ -100,6 +106,7 @@ class _AddUserResponseDialogState extends State<AddUserResponseDialog> {
       DialogRoute(
         context: context,
         builder: (context) => AddSolutionDialog(
+          subtitle: subtitle,
           callback: (solution) => createSolution(solution),
         ),
         barrierColor: Colors.transparent,
@@ -114,6 +121,7 @@ class _AddUserResponseDialogState extends State<AddUserResponseDialog> {
       DialogRoute(
         context: context,
         builder: (context) => AddSolutionDialog(
+          subtitle: subtitle,
           callback: (solution) => updateSolution(solution, index),
           solution: solution,
         ),
@@ -122,16 +130,14 @@ class _AddUserResponseDialogState extends State<AddUserResponseDialog> {
     );
   }
 
-  Row isOkCeckbox() {
+  Row isOkCheckbox() {
     return Row(
       children: [
         Checkbox(
           value: !isOkResponse,
-          onChanged: (newValue) {
-            if (newValue != null) isOkResponse = !newValue;
-            print('$isOkResponse');
-            setState(() {});
-          },
+          onChanged: (!isUpdatingResponse)
+              ? (newValue) => toggleCheckbox(newValue)
+              : null,
         ),
         Text('This response is linked to some problem'),
       ],
@@ -170,5 +176,11 @@ class _AddUserResponseDialogState extends State<AddUserResponseDialog> {
       solutions: solutions,
     ));
     Navigator.pop(context);
+  }
+
+  void toggleCheckbox(newValue) {
+    if (newValue != null) isOkResponse = !newValue;
+
+    setState(() {});
   }
 }

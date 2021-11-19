@@ -29,6 +29,9 @@ class AddComponentDialog extends StatefulWidget {
 class _AddComponentDialogState extends State<AddComponentDialog> {
   final descriptionController = TextEditingController();
 
+  bool get descriptionIsNotEmpty => descriptionController.text.isNotEmpty;
+  String get description => descriptionController.text;
+
   late List<Problem> problems = [];
 
   bool get isUpdatingComponent => widget.component != null;
@@ -38,13 +41,15 @@ class _AddComponentDialogState extends State<AddComponentDialog> {
     if (isUpdatingComponent) {
       Component component = widget.component!;
       descriptionController.text = component.description;
-      problems = component.problems ?? [];
+      problems = component.problems;
     }
     super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
+    addListeners();
+
     return CustomAlertDialog(
       title: 'Add new component',
       subtitle: '${widget.systemName}',
@@ -54,7 +59,9 @@ class _AddComponentDialogState extends State<AddComponentDialog> {
         SizedBox(height: kDefaultPadding),
         SectionSubheaderWithAddButton(
           title: 'Known problems',
-          onPressed: () => navigateToProblemCreation(),
+          onPressed: (descriptionIsNotEmpty)
+              ? () => navigateToProblemCreation()
+              : null,
           addButtonText: 'Add known problem',
         ),
         SizedBox(height: kDefaultPadding / 2),
@@ -75,6 +82,7 @@ class _AddComponentDialogState extends State<AddComponentDialog> {
       ],
       finishButtonTitle:
           isUpdatingComponent ? 'Update component' : 'Add component',
+      isButtonEnabled: descriptionIsNotEmpty,
       onFinish: () => onFinish(),
     );
   }
@@ -85,6 +93,7 @@ class _AddComponentDialogState extends State<AddComponentDialog> {
       DialogRoute(
         context: context,
         builder: (context) => AddKnownProblemDialog(
+          subtitle: description,
           callback: (newProblem) => createProblem(newProblem),
         ),
         barrierColor: Colors.transparent,
@@ -98,6 +107,7 @@ class _AddComponentDialogState extends State<AddComponentDialog> {
       DialogRoute(
         context: context,
         builder: (context) => AddKnownProblemDialog(
+          subtitle: description,
           callback: (newProblem) =>
               updateProblem(problem: newProblem, index: index),
           problem: problem,
@@ -121,11 +131,15 @@ class _AddComponentDialogState extends State<AddComponentDialog> {
     widget.callback(
       Component(
         id: Uuid().v4(),
-        description: descriptionController.text,
+        description: description,
         problems: problems,
       ),
     );
 
     Navigator.pop(context);
+  }
+
+  void addListeners() {
+    descriptionController.addListener(() => setState(() {}));
   }
 }

@@ -1,20 +1,20 @@
 import 'package:doctor_mfc_admin/constants.dart';
 import 'package:doctor_mfc_admin/models/component.dart';
-import 'package:doctor_mfc_admin/models/problem.dart';
+
 import 'package:doctor_mfc_admin/models/system.dart';
-import 'package:doctor_mfc_admin/services/global_values.dart';
-import 'package:doctor_mfc_admin/services/systems_service.dart';
+import 'package:doctor_mfc_admin/services/database.dart';
+
 import 'package:doctor_mfc_admin/widgets/add_component_dialog.dart';
 import 'package:doctor_mfc_admin/widgets/base_input.dart';
 
 import 'package:doctor_mfc_admin/widgets/body_template.dart';
-import 'package:doctor_mfc_admin/widgets/custom_loading_indicator.dart';
+
 import 'package:doctor_mfc_admin/widgets/future_loading_indicator.dart';
 import 'package:doctor_mfc_admin/widgets/object_elevated_button.dart';
 import 'package:doctor_mfc_admin/widgets/section_subheader_with_add_button.dart';
 
-import 'package:doctor_mfc_admin/widgets/text_button_light_bg.dart';
 import 'package:flutter/material.dart';
+import 'package:uuid/uuid.dart';
 
 class AddSystemPage extends StatefulWidget {
   AddSystemPage({Key? key}) : super(key: key);
@@ -62,8 +62,9 @@ class _AddSystemPageState extends State<AddSystemPage> {
         onPressed: (canFinish())
             ? () => futureLoadingIndicator(
                   context,
-                  SystemsService().addSystem(
+                  Database().addSystem(
                     System(
+                      id: Uuid().v4(),
                       model: modelController.text,
                       brand: brandController.text,
                       type: typeController.text,

@@ -1,7 +1,8 @@
 import 'package:doctor_mfc_admin/constants.dart';
 import 'package:doctor_mfc_admin/models/component.dart';
 import 'package:doctor_mfc_admin/models/system.dart';
-import 'package:doctor_mfc_admin/services/systems_service.dart';
+import 'package:doctor_mfc_admin/services/database.dart';
+
 import 'package:doctor_mfc_admin/services/test/test_systems_service.dart';
 import 'package:doctor_mfc_admin/widgets/body_template.dart';
 import 'package:doctor_mfc_admin/widgets/custom_card.dart';
@@ -179,8 +180,8 @@ class _SystemDetailsPageState extends State<SystemDetailsPage> {
   void updateSystem() {
     futureLoadingIndicator(
         context,
-        SystemsService().updateSystem(
-          id: widget.system.id!,
+        Database().updateSystem(
+          id: widget.system.id,
           brand: brandController.text,
           model: modelController.text,
           type: typeController.text,

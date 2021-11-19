@@ -8,9 +8,11 @@ import 'package:uuid/uuid.dart';
 class AddSolutionDialog extends StatefulWidget {
   final Function(Solution) callback;
   final Solution? solution;
+  final String subtitle;
 
   AddSolutionDialog({
     required this.callback,
+    required this.subtitle,
     this.solution,
     Key? key,
   }) : super(key: key);
@@ -48,6 +50,7 @@ class _AddSolutionDialogState extends State<AddSolutionDialog> {
 
     return CustomAlertDialog(
       title: 'Add solution',
+      subtitle: widget.subtitle,
       body: [
         BaseInput(
             title: 'Solution description', controller: descriptionController),

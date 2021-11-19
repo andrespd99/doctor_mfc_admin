@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:doctor_mfc_admin/constants.dart';
 import 'package:doctor_mfc_admin/models/system.dart';
 import 'package:doctor_mfc_admin/services/database.dart';
@@ -54,8 +55,9 @@ class _ManageSystemsPageState extends State<ManageSystemsPage> {
                 content(),
               ],
             );
-          } else
+          } else {
             return CustomLoadingIndicator();
+          }
         });
   }
 
@@ -88,11 +90,16 @@ class _ManageSystemsPageState extends State<ManageSystemsPage> {
             ),
             SizedBox(height: kDefaultPadding * 0.8),
             // List of devices of this TYPE.
-            FutureBuilder<List<System>>(
-                future: database.getSystemsByType(type),
+            StreamBuilder<QuerySnapshot<System>>(
+                stream: database.getSystemsByTypeSnapshots(type),
                 builder: (context, snapshot) {
                   if (snapshot.hasData) {
-                    List<System> systems = snapshot.data!;
+                    // Get List of Systems from query snapshots.
+                    List<System> systems =
+                        snapshot.data!.docs.map((e) => e.data()).toList();
+                    print(type);
+                    print(systems.length);
+
                     return ListView.separated(
                       shrinkWrap: true,
                       physics: NeverScrollableScrollPhysics(),

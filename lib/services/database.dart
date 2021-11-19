@@ -3,60 +3,48 @@ import 'package:doctor_mfc_admin/models/component.dart';
 import 'package:doctor_mfc_admin/models/problem.dart';
 import 'package:doctor_mfc_admin/models/solution.dart';
 import 'package:doctor_mfc_admin/models/system.dart';
-import 'package:doctor_mfc_admin/models/test/test_system.dart';
+
 import 'package:doctor_mfc_admin/models/user_response.dart';
 
 class Database {
   final firestore = FirebaseFirestore.instance;
 
-  final testSystemsRef = FirebaseFirestore.instance
-      .collection('systems')
-      .withConverter<TestSystem>(
-        fromFirestore: (snapshot, _) =>
-            TestSystem.fromMap(snapshot.id, snapshot.data()!),
-        toFirestore: (system, _) => system.toMap(),
-      );
+  final systemsRef =
+      FirebaseFirestore.instance.collection('systems').withConverter<System>(
+            fromFirestore: (snapshot, _) => System.fromMap(
+              id: snapshot.id,
+              data: snapshot.data()!,
+            ),
+            toFirestore: (system, _) => system.toMap(),
+          );
 
 /* ----------------------------- System queries ----------------------------- */
 
-  Stream<QuerySnapshot<TestSystem>> getSystemsSnapshots() {
-    return testSystemsRef.snapshots();
-  }
+  Stream<QuerySnapshot<System>> getSystemsSnapshots() => systemsRef.snapshots();
+
+  Stream<QuerySnapshot<System>> getSystemsByTypeSnapshots(String type) =>
+      systemsRef.where('type', isEqualTo: type).snapshots();
+
+  Stream<DocumentSnapshot<System>> getSystemByIdSnapshot(String id) =>
+      systemsRef.doc(id).snapshots();
 
   Future addSystem(System system) async {
-    List<Component>? components = system.components;
-    List<Problem> problems = system.knownProblems;
-    List<UserResponse> responses = system.userResponses;
-    List<Solution> solutions = system.solutions;
-
     try {
-      return Future.wait([
-        firestore.collection('systems').doc(system.id).set(system.toMap()),
-        addComponents(components ?? []),
-        addKnownProblems(problems),
-        addResponses(responses),
-        addSolutions(solutions),
-      ]);
+      final docRef = firestore.collection('systems').doc(system.id);
+
+      await docRef.set(system.toMap());
     } catch (e) {
-      // TODO: Catch errors.
+      print(e);
     }
   }
 
   Future addSystems(List<System> systems) {
     return Future.forEach<System>(systems, (system) async {
-      List<Component>? components = system.components;
-      List<Problem> problems = system.knownProblems;
-      List<UserResponse> responses = system.userResponses;
-      List<Solution> solutions = system.solutions;
-
       try {
-        return await Future.wait([
-          firestore.collection('systems').doc(system.id).set(system.toMap()),
-          addComponents(components ?? []),
-          addKnownProblems(problems),
-          addResponses(responses),
-          addSolutions(solutions),
-        ]);
+        await firestore
+            .collection('systems')
+            .doc(system.id)
+            .set(system.toMap());
       } catch (e) {
         // TODO: Catch errors.
       }
@@ -162,5 +150,23 @@ class Database {
     } catch (e) {
       // TODO: Catch errors.
     }
+  }
+
+  Future updateSystem({
+    required String id,
+    required String brand,
+    required String model,
+    required String type,
+  }) async {
+    try {
+      // Update system with the new data.
+      await firestore.collection('systems').doc(id).update({
+        'brand': brand,
+        'description': model,
+        'type': type,
+      }).then((v) {
+        // TODO: Notify change (?).
+      });
+    } catch (e) {}
   }
 }
