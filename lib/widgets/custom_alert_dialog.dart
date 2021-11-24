@@ -30,35 +30,39 @@ class _CustomAlertDialogState extends State<CustomAlertDialog> {
   @override
   Widget build(BuildContext context) {
     return Center(
-      child: SingleChildScrollView(
-        child: Container(
-          clipBehavior: Clip.hardEdge,
-          width: MediaQuery.of(context).size.width * 0.7,
-          height: MediaQuery.of(context).size.height * 0.85,
-          padding: EdgeInsets.all(kDefaultPadding * 2),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(kDefaultBorderRadius),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              heading(),
-              SizedBox(height: kDefaultPadding * 2),
-              ...widget.body,
-              Spacer(),
-              SizedBox(height: kDefaultPadding / 2),
-              finishButton(),
-            ],
-          ),
+      child: Container(
+        clipBehavior: Clip.hardEdge,
+        width: MediaQuery.of(context).size.width * 0.7,
+        height: MediaQuery.of(context).size.height * 0.85,
+        padding: EdgeInsets.all(kDefaultPadding * 2),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(kDefaultBorderRadius),
+        ),
+        child: Stack(
+          children: [
+            ListView(
+              shrinkWrap: true,
+              // crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                heading(),
+                SizedBox(height: kDefaultPadding * 2),
+                ...widget.body,
+                // Spacer(),
+                SizedBox(height: kDefaultPadding / 2),
+              ],
+            ),
+            finishButton(),
+          ],
         ),
       ),
     );
   }
 
-  Align finishButton() {
-    return Align(
-      alignment: Alignment.bottomRight,
+  Widget finishButton() {
+    return Positioned(
+      bottom: 0,
+      right: 0,
       child: ElevatedButton(
         child: Text('${widget.finishButtonTitle}'),
         onPressed: widget.isButtonEnabled ? () => widget.onFinish() : null,

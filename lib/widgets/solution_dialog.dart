@@ -5,12 +5,12 @@ import 'package:doctor_mfc_admin/widgets/custom_alert_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:uuid/uuid.dart';
 
-class AddSolutionDialog extends StatefulWidget {
+class SolutionDialog extends StatefulWidget {
   final Function(Solution) callback;
   final Solution? solution;
   final String subtitle;
 
-  AddSolutionDialog({
+  SolutionDialog({
     required this.callback,
     required this.subtitle,
     this.solution,
@@ -18,10 +18,10 @@ class AddSolutionDialog extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  _AddSolutionDialogState createState() => _AddSolutionDialogState();
+  _SolutionDialogState createState() => _SolutionDialogState();
 }
 
-class _AddSolutionDialogState extends State<AddSolutionDialog> {
+class _SolutionDialogState extends State<SolutionDialog> {
   final descriptionController = TextEditingController();
   final instructionsController = TextEditingController();
   final videoLinkController = TextEditingController();
@@ -65,8 +65,7 @@ class _AddSolutionDialogState extends State<AddSolutionDialog> {
           errorText: errorText(),
         ),
       ],
-      finishButtonTitle:
-          (widget.solution == null) ? 'Add solution' : 'Update solution',
+      finishButtonTitle: (widget.solution == null) ? 'Save' : 'Update solution',
       onFinish: () => onFinish(),
       isButtonEnabled: canFinish(),
     );

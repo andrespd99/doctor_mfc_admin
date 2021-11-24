@@ -1,9 +1,9 @@
 import 'package:doctor_mfc_admin/constants.dart';
 import 'package:doctor_mfc_admin/models/problem.dart';
 import 'package:doctor_mfc_admin/models/user_response.dart';
-import 'package:doctor_mfc_admin/widgets/add_user_response_dialog.dart';
+import 'package:doctor_mfc_admin/widgets/user_response_dialog.dart';
 import 'package:doctor_mfc_admin/widgets/custom_alert_dialog.dart';
-import 'package:doctor_mfc_admin/widgets/object_elevated_button.dart';
+
 import 'package:doctor_mfc_admin/widgets/section_subheader.dart';
 import 'package:doctor_mfc_admin/widgets/section_subheader_with_add_button.dart';
 import 'package:doctor_mfc_admin/widgets/user_response_elevated_button.dart';
@@ -11,12 +11,12 @@ import 'package:doctor_mfc_admin/widgets/user_response_elevated_button.dart';
 import 'package:flutter/material.dart';
 import 'package:uuid/uuid.dart';
 
-class AddKnownProblemDialog extends StatefulWidget {
+class KnownProblemDialog extends StatefulWidget {
   final Function(Problem) callback;
   final Problem? problem;
   final String subtitle;
 
-  const AddKnownProblemDialog({
+  const KnownProblemDialog({
     required this.callback,
     required this.subtitle,
     this.problem,
@@ -24,10 +24,10 @@ class AddKnownProblemDialog extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  State<AddKnownProblemDialog> createState() => _AddKnownProblemDialogState();
+  State<KnownProblemDialog> createState() => _KnownProblemDialogState();
 }
 
-class _AddKnownProblemDialogState extends State<AddKnownProblemDialog> {
+class _KnownProblemDialogState extends State<KnownProblemDialog> {
   // TextField controllers.
   final descriptionController = TextEditingController();
   final questionController = TextEditingController();
@@ -90,11 +90,11 @@ class _AddKnownProblemDialogState extends State<AddKnownProblemDialog> {
         SizedBox(height: kDefaultPadding),
         // First, user has to select what type of question this is
         // (in askQuestionTypeSection()), then the user responses section is shown.
-        (isBinaryQuestion == null)
+        (userResponses.isEmpty && isBinaryQuestion == null)
             ? askQuestionTypeSection()
             : userResponsesSection(),
       ],
-      finishButtonTitle: isUpdatingProblem ? 'Update problem' : 'Add problem',
+      finishButtonTitle: isUpdatingProblem ? 'Save' : 'Add problem',
       onFinish: () => onFinish(),
       isButtonEnabled: canFinish,
     );
@@ -134,8 +134,7 @@ class _AddKnownProblemDialogState extends State<AddKnownProblemDialog> {
       children: [
         SectionSubheaderWithAddButton(
           title: 'User responses',
-          onPressed:
-              (isBinaryQuestion! == false) ? navigateToResponseCreation : null,
+          onPressed: () => navigateToResponseCreation(),
           addButtonText: 'Add responses',
         ),
         SizedBox(height: kDefaultPadding / 4),
@@ -352,7 +351,7 @@ class _AddKnownProblemDialogState extends State<AddKnownProblemDialog> {
       context,
       DialogRoute(
         context: context,
-        builder: (context) => AddUserResponseDialog(
+        builder: (context) => UserResponseDialog(
           question: question,
           callback: (userResponse) => createResponse(userResponse),
         ),
@@ -369,7 +368,7 @@ class _AddKnownProblemDialogState extends State<AddKnownProblemDialog> {
       context,
       DialogRoute(
         context: context,
-        builder: (context) => AddUserResponseDialog(
+        builder: (context) => UserResponseDialog(
           question: question,
           callback: (updatedResponse) =>
               updateResponse(userResponse: updatedResponse, index: index),
@@ -415,15 +414,16 @@ class _AddKnownProblemDialogState extends State<AddKnownProblemDialog> {
   }
 
   void onFinish() {
-    widget.callback(Problem(
-      id: Uuid().v4(),
-      description: descriptionController.text,
-      keywords: keywords,
-      question: questionController.text,
-      userResponses: userResponses,
-    ));
-
     Navigator.pop(context);
+    widget.callback(
+      Problem(
+        id: Uuid().v4(),
+        description: descriptionController.text,
+        keywords: keywords,
+        question: questionController.text,
+        userResponses: userResponses,
+      ),
+    );
   }
 
   /// Sets the question of this [KnownProblem] as a binary question.

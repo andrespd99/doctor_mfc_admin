@@ -1,4 +1,5 @@
 import 'package:doctor_mfc_admin/models/problem.dart';
+import 'package:doctor_mfc_admin/models/solution.dart';
 
 class Component {
   final String id;
@@ -36,5 +37,25 @@ class Component {
       return data.map((problemData) => Problem.fromMap(problemData)).toList();
     else
       return [];
+  }
+
+  /// Updates the given known problem for this component.
+  void updateKnownProblem(Problem problemUpdated) {
+    problems.forEach((problem) {
+      if (problem.id == problemUpdated.id) {
+        problem = problemUpdated;
+      }
+    });
+  }
+
+  /// List of all solutions linked to this component.
+  List<Solution> get solutions {
+    List<Solution> solutions = [];
+    problems.forEach((problem) {
+      problem.userResponses.forEach((response) {
+        solutions.addAll(response.solutions ?? []);
+      });
+    });
+    return solutions;
   }
 }

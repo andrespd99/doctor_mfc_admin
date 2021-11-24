@@ -4,10 +4,12 @@ import 'package:flutter/material.dart';
 
 class BodyTemplate extends StatefulWidget {
   final String title;
+  final String? subtitle;
   final List<Widget> body;
 
   BodyTemplate({
     required this.title,
+    this.subtitle,
     required this.body,
     Key? key,
   }) : super(key: key);
@@ -42,7 +44,10 @@ class _BodyTemplateState extends State<BodyTemplate> {
                   children: [
                     (Navigator.canPop(context)) ? goBackButton() : Container(),
                     SizedBox(width: kDefaultPadding / 3),
-                    SectionHeader(title: '${widget.title}'),
+                    SectionHeader(
+                      title: '${widget.title}',
+                      subtitle: widget.subtitle,
+                    ),
                   ],
                 ),
                 SizedBox(height: kDefaultPadding * 2.5),

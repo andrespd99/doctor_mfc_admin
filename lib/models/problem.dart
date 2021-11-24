@@ -1,3 +1,4 @@
+import 'package:doctor_mfc_admin/models/solution.dart';
 import 'package:doctor_mfc_admin/models/user_response.dart';
 
 class Problem {
@@ -48,5 +49,26 @@ class Problem {
           .toList();
     else
       return [];
+  }
+
+  /// Returns the amount of failure options (user responses with solutions associated)
+  /// linked to this problem.
+  int get failureOptionsCount {
+    int counter = 0;
+    userResponses.forEach((response) {
+      if (!response.isOkResponse) counter++;
+    });
+    return counter;
+  }
+
+  /// Returns all solutions linked to this problem.
+  List<Solution> get solutions {
+    List<Solution> solutions = [];
+
+    userResponses.forEach((response) {
+      solutions.addAll(response.solutions ?? []);
+    });
+
+    return solutions;
   }
 }

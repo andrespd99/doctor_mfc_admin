@@ -4,7 +4,7 @@ import 'package:doctor_mfc_admin/models/component.dart';
 import 'package:doctor_mfc_admin/models/system.dart';
 import 'package:doctor_mfc_admin/services/database.dart';
 
-import 'package:doctor_mfc_admin/widgets/add_component_dialog.dart';
+import 'package:doctor_mfc_admin/widgets/component_dialog.dart';
 import 'package:doctor_mfc_admin/widgets/base_input.dart';
 
 import 'package:doctor_mfc_admin/widgets/body_template.dart';
@@ -135,7 +135,7 @@ class _AddSystemPageState extends State<AddSystemPage> {
     showDialog(
       context: context,
       builder: (context) {
-        return AddComponentDialog(
+        return ComponentDialog(
           systemName: '$systemModel',
           callback: (newComponent) => createComponent(newComponent),
         );
@@ -148,7 +148,7 @@ class _AddSystemPageState extends State<AddSystemPage> {
     showDialog(
       context: context,
       builder: (context) {
-        return AddComponentDialog(
+        return ComponentDialog(
           systemName: '$systemModel',
           callback: (newComponent) =>
               updateComponent(component: newComponent, index: index),

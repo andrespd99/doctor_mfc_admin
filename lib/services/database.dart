@@ -152,21 +152,33 @@ class Database {
     }
   }
 
-  Future updateSystem({
-    required String id,
-    required String brand,
-    required String model,
-    required String type,
-  }) async {
+  /* ----------------------------- Update queries ----------------------------- */
+
+  Future updateSystem(System system) async {
     try {
       // Update system with the new data.
-      await firestore.collection('systems').doc(id).update({
-        'brand': brand,
-        'description': model,
-        'type': type,
-      }).then((v) {
+      await firestore
+          .collection('systems')
+          .doc(system.id)
+          .update(system.toMap())
+          .then((v) {
         // TODO: Notify change (?).
       });
     } catch (e) {}
+  }
+
+  /// Updates this problem in the database and returns the Future of this action.
+  Future updateKnownProblem(Problem problem) {
+    return firestore
+        .collection('problems')
+        .doc(problem.id)
+        .update(problem.toMap());
+  }
+
+  /* ----------------------------- Delete queries ----------------------------- */
+
+  /// Deletes the system of `id` and returns the Future of this action.
+  Future deleteSystem(String id) {
+    return firestore.collection('systems').doc(id).delete();
   }
 }

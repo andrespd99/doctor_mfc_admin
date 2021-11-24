@@ -6,9 +6,10 @@ import 'package:doctor_mfc_admin/models/user_response.dart';
 
 class System {
   final String id;
-  final String model;
+  String model;
+  String brand;
+
   final String type;
-  final String brand;
   final List<Component> components;
 
   System({
@@ -45,7 +46,7 @@ class System {
   int knownProblemsCount() {
     int counter = 0;
     components.forEach((component) {
-      component.problems?.forEach((problem) => counter++);
+      component.problems.forEach((problem) => counter++);
     });
     return counter;
   }
@@ -78,6 +79,23 @@ class System {
           .toList();
     else
       return [];
+  }
+
+  /// Updates the information of the given component for this system.
+  void updateComponent(Component componentUpdated) {
+    components.forEach((component) {
+      if (component.id == componentUpdated.id) {
+        component = componentUpdated;
+      }
+    });
+  }
+
+  /// Get component by `id`
+  Component getComponent(String id) {
+    return components.firstWhere(
+      (component) => component.id == id,
+      orElse: () => throw Exception(),
+    );
   }
 
 /* --------------------------------- Getters -------------------------------- */

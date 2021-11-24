@@ -5,11 +5,13 @@ import 'package:flutter/material.dart';
 
 class CustomCard extends StatefulWidget {
   final String title;
+  final String? subtitle;
   final List<Widget> body;
   final Function() onPressed;
 
   CustomCard({
     required this.title,
+    this.subtitle,
     required this.body,
     required this.onPressed,
     Key? key,
@@ -32,6 +34,8 @@ class _CustomCardState extends State<CustomCard> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               title(),
+              SizedBox(height: kDefaultPadding / 4),
+              subtitle(),
               SizedBox(height: kDefaultPadding / 2),
               ...widget.body,
             ],
@@ -58,5 +62,18 @@ class _CustomCardState extends State<CustomCard> {
       '${widget.title}',
       style: Theme.of(context).textTheme.headline6,
     );
+  }
+
+  Widget subtitle() {
+    if (widget.subtitle != null)
+      return Text(
+        '${widget.subtitle}',
+        style: Theme.of(context)
+            .textTheme
+            .bodyText2
+            ?.copyWith(color: kFontBlack.withOpacity(0.5)),
+      );
+    else
+      return Container();
   }
 }

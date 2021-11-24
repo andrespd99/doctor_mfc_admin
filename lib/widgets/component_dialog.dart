@@ -1,7 +1,7 @@
 import 'package:doctor_mfc_admin/constants.dart';
 import 'package:doctor_mfc_admin/models/component.dart';
 import 'package:doctor_mfc_admin/models/problem.dart';
-import 'package:doctor_mfc_admin/widgets/add_known_problem_dialog.dart';
+import 'package:doctor_mfc_admin/widgets/known_problem_dialog.dart';
 import 'package:doctor_mfc_admin/widgets/base_input.dart';
 import 'package:doctor_mfc_admin/widgets/custom_alert_dialog.dart';
 import 'package:doctor_mfc_admin/widgets/object_elevated_button.dart';
@@ -9,13 +9,13 @@ import 'package:doctor_mfc_admin/widgets/section_subheader_with_add_button.dart'
 import 'package:flutter/material.dart';
 import 'package:uuid/uuid.dart';
 
-class AddComponentDialog extends StatefulWidget {
+class ComponentDialog extends StatefulWidget {
   final String systemName;
   final Component? component;
 
   final Function(Component) callback;
 
-  const AddComponentDialog({
+  const ComponentDialog({
     required this.systemName,
     required this.callback,
     this.component,
@@ -23,10 +23,10 @@ class AddComponentDialog extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  State<AddComponentDialog> createState() => _AddComponentDialogState();
+  State<ComponentDialog> createState() => _ComponentDialogState();
 }
 
-class _AddComponentDialogState extends State<AddComponentDialog> {
+class _ComponentDialogState extends State<ComponentDialog> {
   final descriptionController = TextEditingController();
 
   bool get descriptionIsNotEmpty => descriptionController.text.isNotEmpty;
@@ -80,8 +80,7 @@ class _AddComponentDialogState extends State<AddComponentDialog> {
           ),
         ),
       ],
-      finishButtonTitle:
-          isUpdatingComponent ? 'Update component' : 'Add component',
+      finishButtonTitle: isUpdatingComponent ? 'Save' : 'Add component',
       isButtonEnabled: descriptionIsNotEmpty,
       onFinish: () => onFinish(),
     );
@@ -92,7 +91,7 @@ class _AddComponentDialogState extends State<AddComponentDialog> {
       context,
       DialogRoute(
         context: context,
-        builder: (context) => AddKnownProblemDialog(
+        builder: (context) => KnownProblemDialog(
           subtitle: description,
           callback: (newProblem) => createProblem(newProblem),
         ),
@@ -106,7 +105,7 @@ class _AddComponentDialogState extends State<AddComponentDialog> {
       context,
       DialogRoute(
         context: context,
-        builder: (context) => AddKnownProblemDialog(
+        builder: (context) => KnownProblemDialog(
           subtitle: description,
           callback: (newProblem) =>
               updateProblem(problem: newProblem, index: index),

@@ -4,6 +4,8 @@ import 'package:doctor_mfc_admin/models/system.dart';
 import 'package:doctor_mfc_admin/services/database.dart';
 
 import 'package:doctor_mfc_admin/services/test/test_systems_service.dart';
+import 'package:doctor_mfc_admin/src/component_details_page.dart';
+import 'package:doctor_mfc_admin/widgets/alert_elevated_button.dart';
 import 'package:doctor_mfc_admin/widgets/body_template.dart';
 import 'package:doctor_mfc_admin/widgets/custom_card.dart';
 import 'package:doctor_mfc_admin/widgets/future_loading_indicator.dart';
@@ -28,6 +30,10 @@ class _SystemDetailsPageState extends State<SystemDetailsPage> {
   final modelController = TextEditingController();
   final brandController = TextEditingController();
   final typeController = TextEditingController();
+
+  String get brand => brandController.text;
+  String get model => modelController.text;
+  String get type => typeController.text;
 
   bool editingEnabled = false;
 
@@ -97,8 +103,8 @@ class _SystemDetailsPageState extends State<SystemDetailsPage> {
   }
 
   StatelessWidget componentsList() {
-    if (widget.system.components != null) {
-      List<Component> components = widget.system.components!;
+    if (widget.system.components.isNotEmpty) {
+      List<Component> components = widget.system.components;
 
       return ListView.separated(
         shrinkWrap: true,
@@ -110,8 +116,13 @@ class _SystemDetailsPageState extends State<SystemDetailsPage> {
             alignment: Alignment.centerLeft,
             child: CustomCard(
               title: component.description,
-              body: [],
-              onPressed: () {},
+              body: [
+                Text('${component.problems.length} known problems'),
+                SizedBox(height: kDefaultPadding / 4),
+                Text('${component.solutions.length} solutions'),
+              ],
+              onPressed: () =>
+                  goToComponentDetails(component, widget.system.model),
             ),
           );
         },
@@ -156,6 +167,11 @@ class _SystemDetailsPageState extends State<SystemDetailsPage> {
     if (editingEnabled) {
       return Row(
         children: [
+          AlertElevatedButton(
+            child: Text('Delete'),
+            onPressed: () => promptDelete(),
+          ),
+          Spacer(),
           ElevatedButton(
             child: Text('Cancel'),
             onPressed: () {
@@ -177,15 +193,14 @@ class _SystemDetailsPageState extends State<SystemDetailsPage> {
       return Container();
   }
 
-  void updateSystem() {
-    futureLoadingIndicator(
-        context,
-        Database().updateSystem(
-          id: widget.system.id,
-          brand: brandController.text,
-          model: modelController.text,
-          type: typeController.text,
-        ));
+  void updateSystem() async {
+    widget.system.brand = brand;
+    widget.system.model = model;
+
+    await futureLoadingIndicator(
+        context, Database().updateSystem(widget.system));
+
+    setState(() {});
   }
 
   void toggleEditMode() {
@@ -198,5 +213,52 @@ class _SystemDetailsPageState extends State<SystemDetailsPage> {
     modelController.text = widget.system.model;
     brandController.text = widget.system.brand;
     typeController.text = widget.system.type;
+  }
+
+  goToComponentDetails(Component component, String model) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ComponentDetailsPage(
+          system: widget.system,
+          component: component,
+          systemName: model,
+        ),
+      ),
+    );
+  }
+
+  promptDelete() {
+    showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            title: Text('Delete ${widget.system.model}'),
+            content: Text(
+              """Are you sure you want to delete this system? 
+                You can't revert this action.""",
+            ),
+            actionsAlignment: MainAxisAlignment.spaceBetween,
+            actionsPadding: EdgeInsets.all(kDefaultPadding),
+            actions: [
+              AlertElevatedButton(
+                child: Text('Delete'),
+                onPressed: () {
+                  // TODO: Delete system.
+                  futureLoadingIndicator(
+                    context,
+                    Database().deleteSystem(widget.system.id),
+                  )
+                      .then((value) => Navigator.pop(context))
+                      .whenComplete(() => Navigator.pop(context));
+                },
+              ),
+              ElevatedButton(
+                child: Text('Cancel'),
+                onPressed: () => Navigator.pop(context),
+              )
+            ],
+          );
+        });
   }
 }

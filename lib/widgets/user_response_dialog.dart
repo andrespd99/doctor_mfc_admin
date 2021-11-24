@@ -1,21 +1,21 @@
 import 'package:doctor_mfc_admin/constants.dart';
 import 'package:doctor_mfc_admin/models/solution.dart';
 import 'package:doctor_mfc_admin/models/user_response.dart';
-import 'package:doctor_mfc_admin/widgets/add_solution_dialog.dart';
+import 'package:doctor_mfc_admin/widgets/solution_dialog.dart';
 import 'package:doctor_mfc_admin/widgets/base_input.dart';
 import 'package:doctor_mfc_admin/widgets/custom_alert_dialog.dart';
 import 'package:doctor_mfc_admin/widgets/object_elevated_button.dart';
 import 'package:doctor_mfc_admin/widgets/section_subheader_with_add_button.dart';
-import 'package:doctor_mfc_admin/widgets/text_button_light_bg.dart';
+
 import 'package:flutter/material.dart';
 import 'package:uuid/uuid.dart';
 
-class AddUserResponseDialog extends StatefulWidget {
+class UserResponseDialog extends StatefulWidget {
   final Function(UserResponse) callback;
   final UserResponse? userResponse;
   final String question;
 
-  AddUserResponseDialog({
+  UserResponseDialog({
     required this.callback,
     required this.question,
     this.userResponse,
@@ -23,10 +23,10 @@ class AddUserResponseDialog extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  _AddUserResponseDialogState createState() => _AddUserResponseDialogState();
+  _UserResponseDialogState createState() => _UserResponseDialogState();
 }
 
-class _AddUserResponseDialogState extends State<AddUserResponseDialog> {
+class _UserResponseDialogState extends State<UserResponseDialog> {
   final descriptionController = TextEditingController();
   late bool isOkResponse = false;
 
@@ -65,8 +65,7 @@ class _AddUserResponseDialogState extends State<AddUserResponseDialog> {
         SizedBox(height: kDefaultPadding),
         solutionsSection()
       ],
-      finishButtonTitle:
-          (isUpdatingResponse) ? 'Update response' : 'Add response',
+      finishButtonTitle: (isUpdatingResponse) ? 'Save' : 'Add response',
       onFinish: () => onFinish(),
       isButtonEnabled: canFinish,
     );
@@ -83,9 +82,9 @@ class _AddUserResponseDialogState extends State<AddUserResponseDialog> {
         ),
         SizedBox(height: kDefaultPadding / 2),
         SizedBox(
-          height: 250,
           width: 250,
           child: ListView.separated(
+            shrinkWrap: true,
             itemCount: solutions.length,
             itemBuilder: (context, i) => ObjectElevatedButton(
               title: '${solutions[i].description}',
@@ -105,7 +104,7 @@ class _AddUserResponseDialogState extends State<AddUserResponseDialog> {
       context,
       DialogRoute(
         context: context,
-        builder: (context) => AddSolutionDialog(
+        builder: (context) => SolutionDialog(
           subtitle: subtitle,
           callback: (solution) => createSolution(solution),
         ),
@@ -120,7 +119,7 @@ class _AddUserResponseDialogState extends State<AddUserResponseDialog> {
       context,
       DialogRoute(
         context: context,
-        builder: (context) => AddSolutionDialog(
+        builder: (context) => SolutionDialog(
           subtitle: subtitle,
           callback: (solution) => updateSolution(solution, index),
           solution: solution,
