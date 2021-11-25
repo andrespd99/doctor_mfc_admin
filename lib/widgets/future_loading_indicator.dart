@@ -7,21 +7,25 @@ Future futureLoadingIndicator(BuildContext context, Future future) {
   return showDialog(
     context: context,
     builder: (context) {
-      future.then((_) => Navigator.pop(context)).timeout(Duration(seconds: 3),
-          onTimeout: () {
+      future
+          .then(
+        (_) => Navigator.pop(context),
+        onError: (error, stackTrace) => onErrorDialog(
+          context: context,
+          errorMessage: 'An unexpected error has ocurred: $error',
+          onTryAgainFuture: future,
+          error: error,
+          stackTrace: stackTrace,
+        ),
+      )
+          .timeout(Duration(seconds: 3), onTimeout: () {
         Navigator.pop(context);
         onErrorDialog(
           context: context,
           errorMessage: 'Request timeout',
           onTryAgainFuture: future,
         );
-      }).onError(
-        (error, stackTrace) => onErrorDialog(
-          context: context,
-          errorMessage: 'An unexpected error has ocurred',
-          onTryAgainFuture: future,
-        ),
-      );
+      });
 
       return Center(
         child: Container(
@@ -57,28 +61,33 @@ void onErrorDialog({
   required BuildContext context,
   String? errorMessage,
   Future? onTryAgainFuture,
+  Object? error,
+  StackTrace? stackTrace,
 }) {
+  print(error);
+  print(stackTrace);
+
   showDialog(
-      context: context,
-      builder: (context) {
-        return CupertinoAlertDialog(
-          title: Text('Error'),
-          content: Text(errorMessage ?? 'An error has ocurred'),
-          actions: [
-            CupertinoDialogAction(
-              child: Text('Cancel'),
-              onPressed: () => Navigator.pop(context),
-            ),
-            (onTryAgainFuture != null)
-                ? CupertinoDialogAction(
-                    child: Text('Try again'),
-                    isDefaultAction: true,
-                    onPressed: () {
-                      Navigator.pop(context);
-                      futureLoadingIndicator(context, onTryAgainFuture);
-                    })
-                : Container(),
-          ],
-        );
-      });
+    context: context,
+    builder: (context) {
+      return AlertDialog(
+        title: Text('Error'),
+        content: Text(errorMessage ?? 'An error has ocurred'),
+        actions: [
+          TextButton(
+            child: Text('Cancel'),
+            onPressed: () => Navigator.pop(context),
+          ),
+          (onTryAgainFuture != null)
+              ? TextButton(
+                  child: Text('Try again'),
+                  onPressed: () {
+                    Navigator.pop(context);
+                    futureLoadingIndicator(context, onTryAgainFuture);
+                  })
+              : Container(),
+        ],
+      );
+    },
+  );
 }

@@ -29,7 +29,7 @@ class System {
       model: data['description'],
       type: data['type'],
       brand: data['brand'],
-      components: _getComponents(List.from(data['components'] ?? [])),
+      components: _componentsFromMap(List.from(data['components'] ?? [])),
     );
   }
 
@@ -42,43 +42,29 @@ class System {
     };
   }
 
-  /// Returns the amount of known problems this component has.
-  int knownProblemsCount() {
-    int counter = 0;
-    components.forEach((component) {
-      component.problems.forEach((problem) => counter++);
-    });
-    return counter;
-  }
-
-  /// Returns the amount of solutions this component has.
-  int solutionsCount() {
-    int counter = 0;
-
-    components.forEach((component) {
-      component.problems.forEach((problem) {
-        problem.userResponses.forEach((response) {
-          response.solutions?.forEach((solution) => counter++);
-        });
-      });
-    });
-
-    return counter;
-  }
-
   /// Converts a List of [Component]s to a json map.
   List<Map<String, dynamic>> _componentsToMap() {
     return components.map((component) => component.toMap()).toList();
   }
 
   /// Converts a json map to a List of [Component]s.
-  static List<Component> _getComponents(List<Map<String, dynamic>>? data) {
+  static List<Component> _componentsFromMap(List<Map<String, dynamic>>? data) {
     if (data != null)
       return data
           .map((componentData) => Component.fromMap(componentData))
           .toList();
     else
       return [];
+  }
+
+  void addComponent(Component component) => components.add(component);
+
+  /// Get component by `id`
+  Component getComponent(String id) {
+    return components.firstWhere(
+      (component) => component.id == id,
+      orElse: () => throw Exception(),
+    );
   }
 
   /// Updates the information of the given component for this system.
@@ -90,12 +76,8 @@ class System {
     });
   }
 
-  /// Get component by `id`
-  Component getComponent(String id) {
-    return components.firstWhere(
-      (component) => component.id == id,
-      orElse: () => throw Exception(),
-    );
+  void deleteComponent(Component component) {
+    components.remove(component);
   }
 
 /* --------------------------------- Getters -------------------------------- */

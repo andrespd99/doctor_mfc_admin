@@ -37,21 +37,23 @@ class _AddSystemPageState extends State<AddSystemPage> {
   Widget build(BuildContext context) {
     addListeners();
 
-    return BodyTemplate(
-      title: 'Add new system',
-      body: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            attributeInputs(),
-            Spacer(),
-            componentsColumn(),
-          ],
-        ),
-        SizedBox(height: kDefaultPadding * 3),
-        createSystemButton(),
-      ],
+    return Scaffold(
+      body: BodyTemplate(
+        title: 'Add new system',
+        body: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              attributeInputs(),
+              Spacer(),
+              componentsColumn(),
+            ],
+          ),
+          SizedBox(height: kDefaultPadding * 3),
+          createSystemButton(),
+        ],
+      ),
     );
   }
 
@@ -71,9 +73,10 @@ class _AddSystemPageState extends State<AddSystemPage> {
                       components: components,
                     ),
                   ),
-                ).then((_) {
-                  onComplete();
-                })
+                ).then(
+                  (_) => onComplete(),
+                  onError: (err, stack) => onError(err, stack),
+                )
             : null,
       ),
     );
@@ -179,6 +182,9 @@ class _AddSystemPageState extends State<AddSystemPage> {
   void onComplete() {
     cleanEntries();
 
+    final snackBar = SnackBar(content: Text('System created successfully!'));
+    ScaffoldMessenger.of(context).showSnackBar(snackBar);
+
     setState(() {});
   }
 
@@ -195,6 +201,15 @@ class _AddSystemPageState extends State<AddSystemPage> {
     modelController.addListener(() => setState(() {}));
     brandController.addListener(() => setState(() {}));
     typeController.addListener(() => setState(() {}));
+  }
+
+  onError([Object? error, StackTrace? stackTrace]) {
+    print(error);
+    print(stackTrace);
+
+    final snackBar = SnackBar(content: Text('A problem ocurred. Try again.'));
+
+    ScaffoldMessenger.of(context).showSnackBar(snackBar);
   }
 
   // TODO: Make dropdown

@@ -8,12 +8,16 @@ class CustomCard extends StatefulWidget {
   final String? subtitle;
   final List<Widget> body;
   final Function() onPressed;
+  final bool showDeleteButton;
+  final Function()? onDelete;
 
   CustomCard({
     required this.title,
     this.subtitle,
     required this.body,
     required this.onPressed,
+    this.showDeleteButton = false,
+    this.onDelete,
     Key? key,
   }) : super(key: key);
 
@@ -41,9 +45,17 @@ class _CustomCardState extends State<CustomCard> {
             ],
           ),
           Spacer(),
-          forwardButton()
+          (widget.showDeleteButton) ? deleteButton() : forwardButton()
         ],
       ),
+    );
+  }
+
+  TextButton deleteButton() {
+    return TextButton(
+      onPressed: (widget.onDelete != null) ? () => widget.onDelete!() : null,
+      child: Text('Delete'),
+      style: TextButton.styleFrom(primary: kAccentColor),
     );
   }
 

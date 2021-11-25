@@ -39,6 +39,8 @@ class Component {
       return [];
   }
 
+  void addKnownProblem(Problem problem) => problems.add(problem);
+
   /// Updates the given known problem for this component.
   void updateKnownProblem(Problem problemUpdated) {
     problems.forEach((problem) {
@@ -47,6 +49,8 @@ class Component {
       }
     });
   }
+
+  void deleteKnownProblem(Problem problem) => problems.remove(problem);
 
   /// List of all solutions linked to this component.
   List<Solution> get solutions {

@@ -127,6 +127,8 @@ class _ComponentDialogState extends State<ComponentDialog> {
   }
 
   void onFinish() {
+    Navigator.pop(context);
+
     widget.callback(
       Component(
         id: Uuid().v4(),
@@ -134,8 +136,6 @@ class _ComponentDialogState extends State<ComponentDialog> {
         problems: problems,
       ),
     );
-
-    Navigator.pop(context);
   }
 
   void addListeners() {

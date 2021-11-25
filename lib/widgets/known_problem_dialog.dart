@@ -415,6 +415,7 @@ class _KnownProblemDialogState extends State<KnownProblemDialog> {
 
   void onFinish() {
     Navigator.pop(context);
+
     widget.callback(
       Problem(
         id: Uuid().v4(),

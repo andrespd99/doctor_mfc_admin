@@ -25,7 +25,7 @@ class Database {
   Stream<QuerySnapshot<System>> getSystemsByTypeSnapshots(String type) =>
       systemsRef.where('type', isEqualTo: type).snapshots();
 
-  Stream<DocumentSnapshot<System>> getSystemByIdSnapshot(String id) =>
+  Stream<DocumentSnapshot<System>> getSystemSnapshotById(String id) =>
       systemsRef.doc(id).snapshots();
 
   Future addSystem(System system) async {

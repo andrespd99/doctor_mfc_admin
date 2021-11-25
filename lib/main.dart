@@ -55,13 +55,16 @@ class MyApp extends StatelessWidget {
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
+          visualDensity: VisualDensity.compact,
           primary: kPrimaryColor.withOpacity(0.8),
           // shadowColor: kAccentColor,
           textStyle: TextStyle(
             fontWeight: FontWeight.bold,
           ),
           padding: EdgeInsets.symmetric(
-              horizontal: kDefaultPadding, vertical: kDefaultPadding * 1.2),
+            horizontal: kDefaultPadding / 2,
+            vertical: kDefaultPadding,
+          ),
           shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(kDefaultBorderRadius)),
         ),

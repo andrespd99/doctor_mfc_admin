@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:doctor_mfc_admin/constants.dart';
 import 'package:doctor_mfc_admin/models/component.dart';
 import 'package:doctor_mfc_admin/models/system.dart';
@@ -7,10 +8,14 @@ import 'package:doctor_mfc_admin/services/test/test_systems_service.dart';
 import 'package:doctor_mfc_admin/src/component_details_page.dart';
 import 'package:doctor_mfc_admin/widgets/alert_elevated_button.dart';
 import 'package:doctor_mfc_admin/widgets/body_template.dart';
+import 'package:doctor_mfc_admin/widgets/component_dialog.dart';
 import 'package:doctor_mfc_admin/widgets/custom_card.dart';
+import 'package:doctor_mfc_admin/widgets/custom_loading_indicator.dart';
 import 'package:doctor_mfc_admin/widgets/future_loading_indicator.dart';
+import 'package:doctor_mfc_admin/widgets/green_elevated_button.dart';
 
 import 'package:doctor_mfc_admin/widgets/section_subheader.dart';
+import 'package:doctor_mfc_admin/widgets/section_subheader_with_add_button.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -27,6 +32,8 @@ class SystemDetailsPage extends StatefulWidget {
 }
 
 class _SystemDetailsPageState extends State<SystemDetailsPage> {
+  late System system = widget.system;
+
   final modelController = TextEditingController();
   final brandController = TextEditingController();
   final typeController = TextEditingController();
@@ -35,49 +42,77 @@ class _SystemDetailsPageState extends State<SystemDetailsPage> {
   String get model => modelController.text;
   String get type => typeController.text;
 
-  bool editingEnabled = false;
+  late bool editingEnabled = false;
+  late bool manageModeEnabled = false;
 
   @override
   void initState() {
-    modelController.text = widget.system.model;
-    brandController.text = widget.system.brand;
-    typeController.text = widget.system.type;
+    modelController.text = system.model;
+    brandController.text = system.brand;
+    typeController.text = system.type;
 
     super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
-    final System system = widget.system;
+    return StreamBuilder<DocumentSnapshot<System>>(
+        stream: Database().getSystemSnapshotById(system.id),
+        builder: (context, snapshot) {
+          if (snapshot.hasData) {
+            if (snapshot.data!.data() != null) {
+              system = snapshot.data!.data()!;
 
-    return BodyTemplate(
-      title: '${system.model}',
-      body: [
-        Row(
-          children: [
-            SectionSubheader('System information'),
-            SizedBox(width: kDefaultPadding / 2),
-            (editingEnabled)
-                ? Container()
-                : TextButton(
-                    onPressed: () => toggleEditMode(),
-                    child: Text('Edit',
-                        style: Theme.of(context)
-                            .textTheme
-                            .caption
-                            ?.copyWith(color: Colors.grey)))
-          ],
-        ),
-        SizedBox(height: kDefaultPadding),
-        attributeInputs(),
-        SizedBox(height: kDefaultPadding / 2),
-        confirmEditButton(),
-        SizedBox(height: kDefaultPadding * 2),
-        SectionSubheader('Components'),
-        SizedBox(height: kDefaultPadding),
-        componentsList()
-      ],
-    );
+              return BodyTemplate(
+                title: '${system.model}',
+                body: [
+                  Row(
+                    children: [
+                      SectionSubheader('System information'),
+                      SizedBox(width: kDefaultPadding / 2),
+                      (editingEnabled)
+                          ? Container()
+                          : TextButton(
+                              onPressed: () => toggleEditMode(),
+                              child: Text('Edit',
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .caption
+                                      ?.copyWith(color: Colors.grey)))
+                    ],
+                  ),
+                  SizedBox(height: kDefaultPadding),
+                  attributeInputs(),
+                  SizedBox(height: kDefaultPadding / 2),
+                  confirmEditButton(),
+                  SizedBox(height: kDefaultPadding * 2),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      SectionSubheaderWithAddButton(
+                        title: 'Components',
+                        addButtonText: 'Add component',
+                        onPressed:
+                            (manageModeEnabled) ? null : () => onAddPressed(),
+                      ),
+                      TextButton(
+                        onPressed: () => toggleManageMode(),
+                        child: Text((!manageModeEnabled) ? 'Manage' : 'Finish'),
+                        style: TextButton.styleFrom(
+                          primary: kFontBlack.withOpacity(0.5),
+                        ),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: kDefaultPadding),
+                  componentsList()
+                ],
+              );
+            } else
+              return Container();
+          } else
+            return CustomLoadingIndicator();
+        });
   }
 
   Row attributeInputs() {
@@ -102,15 +137,13 @@ class _SystemDetailsPageState extends State<SystemDetailsPage> {
     );
   }
 
-  StatelessWidget componentsList() {
-    if (widget.system.components.isNotEmpty) {
-      List<Component> components = widget.system.components;
-
+  Widget componentsList() {
+    if (system.components.isNotEmpty) {
       return ListView.separated(
         shrinkWrap: true,
-        itemCount: components.length,
+        itemCount: system.components.length,
         itemBuilder: (context, i) {
-          Component component = components[i];
+          Component component = system.components[i];
 
           return Align(
             alignment: Alignment.centerLeft,
@@ -121,8 +154,9 @@ class _SystemDetailsPageState extends State<SystemDetailsPage> {
                 SizedBox(height: kDefaultPadding / 4),
                 Text('${component.solutions.length} solutions'),
               ],
-              onPressed: () =>
-                  goToComponentDetails(component, widget.system.model),
+              onPressed: () => goToComponentDetails(component, system.model),
+              showDeleteButton: manageModeEnabled,
+              onDelete: () => promptComponentDelete(component),
             ),
           );
         },
@@ -167,17 +201,15 @@ class _SystemDetailsPageState extends State<SystemDetailsPage> {
     if (editingEnabled) {
       return Row(
         children: [
-          AlertElevatedButton(
+          TextButton(
             child: Text('Delete'),
+            style: TextButton.styleFrom(primary: kAccentColor),
             onPressed: () => promptDelete(),
           ),
           Spacer(),
           ElevatedButton(
             child: Text('Cancel'),
-            onPressed: () {
-              cancelChanges();
-              toggleEditMode();
-            },
+            onPressed: () => cancelChanges(),
           ),
           SizedBox(width: kDefaultPadding),
           ElevatedButton(
@@ -194,11 +226,10 @@ class _SystemDetailsPageState extends State<SystemDetailsPage> {
   }
 
   void updateSystem() async {
-    widget.system.brand = brand;
-    widget.system.model = model;
+    system.brand = brand;
+    system.model = model;
 
-    await futureLoadingIndicator(
-        context, Database().updateSystem(widget.system));
+    await futureLoadingIndicator(context, Database().updateSystem(system));
 
     setState(() {});
   }
@@ -210,9 +241,12 @@ class _SystemDetailsPageState extends State<SystemDetailsPage> {
   }
 
   void cancelChanges() {
-    modelController.text = widget.system.model;
-    brandController.text = widget.system.brand;
-    typeController.text = widget.system.type;
+    setState(() {
+      modelController.text = system.model;
+      brandController.text = system.brand;
+      typeController.text = system.type;
+      editingEnabled = false;
+    });
   }
 
   goToComponentDetails(Component component, String model) {
@@ -220,7 +254,7 @@ class _SystemDetailsPageState extends State<SystemDetailsPage> {
       context,
       MaterialPageRoute(
         builder: (_) => ComponentDetailsPage(
-          system: widget.system,
+          systemId: system.id,
           component: component,
           systemName: model,
         ),
@@ -233,7 +267,7 @@ class _SystemDetailsPageState extends State<SystemDetailsPage> {
         context: context,
         builder: (context) {
           return AlertDialog(
-            title: Text('Delete ${widget.system.model}'),
+            title: Text('Delete ${system.model}'),
             content: Text(
               """Are you sure you want to delete this system? 
                 You can't revert this action.""",
@@ -241,13 +275,14 @@ class _SystemDetailsPageState extends State<SystemDetailsPage> {
             actionsAlignment: MainAxisAlignment.spaceBetween,
             actionsPadding: EdgeInsets.all(kDefaultPadding),
             actions: [
-              AlertElevatedButton(
+              TextButton(
                 child: Text('Delete'),
+                style: TextButton.styleFrom(primary: kAccentColor),
                 onPressed: () {
                   // TODO: Delete system.
                   futureLoadingIndicator(
                     context,
-                    Database().deleteSystem(widget.system.id),
+                    Database().deleteSystem(system.id),
                   )
                       .then((value) => Navigator.pop(context))
                       .whenComplete(() => Navigator.pop(context));
@@ -260,5 +295,58 @@ class _SystemDetailsPageState extends State<SystemDetailsPage> {
             ],
           );
         });
+  }
+
+  void onAddPressed() => showDialog(
+        context: context,
+        builder: (context) => ComponentDialog(
+          systemName: model,
+          callback: (component) => addComponent(component),
+        ),
+      );
+
+  void addComponent(Component component) {
+    system.addComponent(component);
+
+    futureLoadingIndicator(context, Database().updateSystem(system));
+  }
+
+  void toggleManageMode() {
+    cancelChanges();
+    setState(() {
+      manageModeEnabled = !manageModeEnabled;
+    });
+  }
+
+  void onDelete(Component component) {
+    system.deleteComponent(component);
+
+    futureLoadingIndicator(context, Database().updateSystem(system))
+        .then((value) => Navigator.pop(context));
+  }
+
+  void promptComponentDelete(Component component) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text('Delete ${component.description}'),
+          content: Text('Are you sure you want to delete this component?'),
+          buttonPadding: EdgeInsets.all(kDefaultPadding),
+          actionsAlignment: MainAxisAlignment.spaceBetween,
+          actions: [
+            TextButton(
+              onPressed: () => onDelete(component),
+              child: Text('Delete'),
+              style: TextButton.styleFrom(primary: kAccentColor),
+            ),
+            GreenElevatedButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text('Cancel'),
+            ),
+          ],
+        );
+      },
+    );
   }
 }

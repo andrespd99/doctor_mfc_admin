@@ -111,9 +111,12 @@ class _ManageSystemsPageState extends State<ManageSystemsPage> {
                           child: CustomCard(
                             title: '${system.brand} ${system.model}',
                             body: [
-                              Text('${system.knownProblemsCount()} components'),
-                              SizedBox(height: kDefaultPadding / 2),
-                              Text('${system.solutionsCount()} solutions'),
+                              Text('${system.components.length} components'),
+                              SizedBox(height: kDefaultPadding / 4),
+                              Text(
+                                  '${system.knownProblems.length} known problems'),
+                              SizedBox(height: kDefaultPadding / 4),
+                              Text('${system.solutions.length} solutions'),
                             ],
                             onPressed: () => Navigator.push(
                                 context,
