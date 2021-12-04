@@ -13,7 +13,7 @@ class SectionSubheader extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text('$title', style: textTheme.headline5),
+        Text('$title', style: textTheme.headline6),
       ],
     );
   }
