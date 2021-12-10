@@ -48,7 +48,8 @@ class _SolutionDialogState extends State<SolutionDialog> {
       if (solution.steps != null && solution.steps!.isNotEmpty) {
         isStepBased = true;
         steps = solution.steps!;
-        steps.forEach((step) => addStepController(step.description));
+
+        steps.forEach((step) => addStepControllers(step));
       } else {
         isStepBased = false;
         instructionsController.text = solution.instructions!;
@@ -183,16 +184,19 @@ class _SolutionDialogState extends State<SolutionDialog> {
   }
 
   void setStepBased() {
-    steps = [my.Step(description: '')];
-    stepsControllers = [
-      StepController(TextEditingController(), new FocusNode())
-    ];
+    steps.add(my.Step(description: ''));
+    stepsControllers.add(StepController(TextEditingController()));
     isStepBased = true;
   }
 
-  void addStepController([String? description]) =>
-      stepsControllers.add(StepController(
-          TextEditingController(text: description), new FocusNode()));
+  void addStepControllers(my.Step step) => stepsControllers.add(
+        StepController(
+          TextEditingController(text: step.description),
+          substepControllers: step.substeps
+              .map((substep) => TextEditingController(text: substep))
+              .toList(),
+        ),
+      );
 
   Text stepText(String step) {
     return Text(
@@ -279,6 +283,7 @@ class _SolutionDialogState extends State<SolutionDialog> {
                             itemBuilder: (context, j) {
                               TextEditingController controller =
                                   stepsControllers[i].substepControllers[j];
+
                               return Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
@@ -336,25 +341,25 @@ class _SolutionDialogState extends State<SolutionDialog> {
 
     StepController controller = stepsControllers[index];
     stepsControllers[index - 1]
-        .substepControllers
-        .add(controller.descriptionController);
+        .addSubstepController(controller.descriptionController);
 
-    stepsControllers[index - 1].substepFocusNodes.add(controller.focusNode);
     stepsControllers.removeAt(index);
 
     setState(() {});
   }
 
   void indentStepOut(int index, int subindex) {
-    String stepToIndentOut = steps[index].substeps[subindex];
-    steps.insert(index + 1, my.Step(description: stepToIndentOut));
+    String stepToIndentOutDesc = steps[index].substeps[subindex];
+
+    steps.insert(index + 1, my.Step(description: stepToIndentOutDesc));
     steps[index].substeps.removeAt(subindex);
 
     TextEditingController controller =
         stepsControllers[index].substepControllers[subindex];
-    stepsControllers.insert(
-        index + 1, StepController(controller, new FocusNode()));
-    stepsControllers[index].substepControllers.removeAt(subindex);
+
+    stepsControllers.insert(index + 1, StepController(controller));
+
+    stepsControllers[index].removeSubstepController(subindex);
 
     setState(() {});
   }
@@ -365,13 +370,13 @@ class _SolutionDialogState extends State<SolutionDialog> {
           stepsControllers[index].substepControllers[subindex] ==
               stepsControllers[index].substepControllers.last;
 
-      bool lastControllerNotEmpty =
-          stepsControllers[index].substepControllers[subindex].text.isNotEmpty;
+      bool lastControllerIsEmpty =
+          stepsControllers[index].substepControllers[subindex].text.isEmpty;
 
-      if (isLastController && lastControllerNotEmpty) {
+      if (isLastController && !lastControllerIsEmpty) {
         addSubstep(index);
-      } else if (isLastController && !lastControllerNotEmpty) {
-        removeSubstep(index, subindex);
+      } else if (isLastController && lastControllerIsEmpty) {
+        removeStep(index, subindex);
         if (steps[index] == steps.last) {
           addStep();
           requestFocusLastStep();
@@ -399,17 +404,21 @@ class _SolutionDialogState extends State<SolutionDialog> {
 
 //* -------------------- Add/Remove steps and substeps. -------------------- */
   void addStep() {
-    FocusNode node = new FocusNode();
-    stepsControllers.add(StepController(TextEditingController(), node));
-    node.requestFocus();
     steps.add(my.Step(description: ""));
+
+    stepsControllers.add(StepController(TextEditingController()));
+    stepsControllers.last.focusNode.requestFocus();
+
+    setState(() {});
   }
 
   void addSubstep(int index) {
     steps[index].addSubstep("");
-    stepsControllers[index].substepControllers.add(TextEditingController());
-    FocusNode node = new FocusNode();
-    stepsControllers[index].substepFocusNodes.add(node);
+
+    stepsControllers[index].addSubstepController(TextEditingController());
+
+    FocusNode node = stepsControllers[index].substepFocusNodes.last;
+
     node.requestFocus();
     setState(() {});
   }
@@ -418,8 +427,7 @@ class _SolutionDialogState extends State<SolutionDialog> {
     if (steps.length > 1) {
       if (subindex != null) {
         steps[index].substeps.removeAt(subindex);
-        stepsControllers[index].substepControllers.removeAt(subindex);
-        stepsControllers[index].substepFocusNodes.removeAt(subindex);
+        stepsControllers[index].removeSubstepController(subindex);
       } else {
         steps.removeAt(index);
         stepsControllers.removeAt(index);
@@ -428,14 +436,6 @@ class _SolutionDialogState extends State<SolutionDialog> {
     setState(() {});
   }
 
-  void removeSubstep(int index, int subindex) {
-    if (steps[index].substeps.isNotEmpty) {
-      steps[index].substeps.removeAt(subindex);
-      stepsControllers[index].substepControllers.removeAt(subindex);
-      stepsControllers[index].substepFocusNodes.removeAt(subindex);
-    }
-    setState(() {});
-  }
 //* -------------------------------------------------------------------------- */
 
   void requestFocus(int index, [int? subindex]) {
@@ -487,32 +487,32 @@ class _SolutionDialogState extends State<SolutionDialog> {
     Navigator.pop(context);
   }
 
-  bool areStepsValid() {
-    if (steps.length == 0 || anyInvalidSteps())
-      return false;
-    else
-      return true;
-  }
+  // bool areStepsValid() {
+  //   if (steps.length == 0 || anyInvalidSteps())
+  //     return false;
+  //   else
+  //     return true;
+  // }
 
-  bool isLastStep(my.Step step) => steps.last == step;
+  // bool isLastStep(my.Step step) => steps.last == step;
 
-  bool stepHasEmptySubsteps(my.Step step) =>
-      step.substeps.any((substep) => substep.isEmpty);
+  // bool stepHasEmptySubsteps(my.Step step) =>
+  //     step.substeps.any((substep) => substep.isEmpty);
 
-  bool anyInvalidSteps() {
-    for (my.Step step in steps) {
-      if (steps.length > 1 && isLastStep(step) && step.substeps.isEmpty) {
-        // If its not the only step, is the last step, it has no substeps and is empty,
-        // do nothing, it doesn't matter.
-      } else if (isLastStep(step) && step.substeps.isNotEmpty) {
-        // Last step description is empty but has substeps. Not valid.
-        return true;
-      } else if (step.description.isEmpty)
-        return true;
-      else if (stepHasEmptySubsteps(step)) return true;
-    }
-    return false;
-  }
+  // bool anyInvalidSteps() {
+  //   for (my.Step step in steps) {
+  //     if (steps.length > 1 && isLastStep(step) && step.substeps.isEmpty) {
+  //       // If its not the only step, is the last step, it has no substeps and is empty,
+  //       // do nothing, it doesn't matter.
+  //     } else if (isLastStep(step) && step.substeps.isNotEmpty) {
+  //       // Last step description is empty but has substeps. Not valid.
+  //       return true;
+  //     } else if (step.description.isEmpty)
+  //       return true;
+  //     else if (stepHasEmptySubsteps(step)) return true;
+  //   }
+  //   return false;
+  // }
 
   void toggleManageMode() =>
       setState(() => manageModeEnabled = !manageModeEnabled);
@@ -520,9 +520,31 @@ class _SolutionDialogState extends State<SolutionDialog> {
 
 class StepController {
   TextEditingController descriptionController;
+
   List<TextEditingController> substepControllers = [];
-  FocusNode focusNode;
   List<FocusNode> substepFocusNodes = [];
 
-  StepController(this.descriptionController, this.focusNode);
+  FocusNode focusNode = new FocusNode();
+
+  StepController(
+    this.descriptionController, {
+    List<TextEditingController>? substepControllers,
+  }) {
+    this.substepControllers.addAll(substepControllers ?? []);
+
+    this
+        .substepControllers
+        .forEach((controller) => substepFocusNodes.add(FocusNode()));
+  }
+
+  void addSubstepController(TextEditingController controller) {
+    substepControllers.add(controller);
+    substepFocusNodes.add(new FocusNode());
+  }
+
+  /// Removes substep at `index`. If no `index` is given, removes the last substep.
+  void removeSubstepController([int? index]) {
+    substepControllers.removeAt(index ?? substepControllers.length - 1);
+    substepFocusNodes.removeAt(index ?? substepFocusNodes.length - 1);
+  }
 }

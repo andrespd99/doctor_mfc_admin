@@ -1,13 +1,14 @@
 class Step {
   String description;
-  late List<String> substeps;
+  List<String> substeps;
 
-  Step({required this.description, substeps}) : this.substeps = substeps ?? [];
+  Step({required this.description, List<String>? substeps})
+      : this.substeps = substeps ?? [];
 
   factory Step.fromMap(Map<String, dynamic> map) {
     return Step(
       description: map['description'] as String,
-      substeps: map['substeps'] as List<String>?,
+      substeps: List<String>.from(map['substeps'] ?? []),
     );
   }
 

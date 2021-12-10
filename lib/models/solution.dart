@@ -21,8 +21,10 @@ class Solution {
   factory Solution.fromMap(Map<String, dynamic> data) {
     List<Step> steps = [];
 
-    data['steps']
-        ?.forEach((Map<String, dynamic> map) => steps.add(Step.fromMap(map)));
+    final stepsMap = List<Map<String, dynamic>>.from(data['steps'] ?? []);
+
+    stepsMap
+        .forEach((Map<String, dynamic> map) => steps.add(Step.fromMap(map)));
 
     return Solution(
       id: data['id'],
