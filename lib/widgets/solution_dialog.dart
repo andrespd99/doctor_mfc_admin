@@ -336,6 +336,8 @@ class _SolutionDialogState extends State<SolutionDialog> {
 
   void indentStepIn(int index) {
     my.Step stepToIndent = steps[index];
+    List<String> stepToIndentSubsteps = stepToIndent.substeps;
+
     steps[index - 1].addSubstep(stepToIndent.description);
     steps.removeAt(index);
 
@@ -345,21 +347,43 @@ class _SolutionDialogState extends State<SolutionDialog> {
 
     stepsControllers.removeAt(index);
 
+    if (stepToIndentSubsteps.isNotEmpty) {
+      stepToIndentSubsteps.forEach((substep) {
+        steps[index - 1].addSubstep(substep);
+        stepsControllers[index - 1]
+            .addSubstepController(TextEditingController(text: substep));
+      });
+    }
+
     setState(() {});
   }
 
   void indentStepOut(int index, int subindex) {
+    /// Indent step out
     String stepToIndentOutDesc = steps[index].substeps[subindex];
-
     steps.insert(index + 1, my.Step(description: stepToIndentOutDesc));
     steps[index].substeps.removeAt(subindex);
 
+    // Reallocate the indented step's controller.
     TextEditingController controller =
         stepsControllers[index].substepControllers[subindex];
-
     stepsControllers.insert(index + 1, StepController(controller));
-
     stepsControllers[index].removeSubstepController(subindex);
+
+    // Reallocate the following substeps.
+    final auxSubstepControllers =
+        stepsControllers[index].substepControllers.sublist(subindex);
+    final auxSubsteps = steps[index].substeps.sublist(subindex);
+
+    stepsControllers[index].removeSubstepControllersFrom(subindex);
+    steps[index].substeps.removeRange(subindex, steps[index].substeps.length);
+
+    auxSubstepControllers.forEach((substepController) {
+      stepsControllers[index + 1].addSubstepController(substepController);
+    });
+    auxSubsteps.forEach((substep) {
+      steps[index + 1].addSubstep(substep);
+    });
 
     setState(() {});
   }
@@ -546,5 +570,15 @@ class StepController {
   void removeSubstepController([int? index]) {
     substepControllers.removeAt(index ?? substepControllers.length - 1);
     substepFocusNodes.removeAt(index ?? substepFocusNodes.length - 1);
+  }
+
+  void removeSubstepControllersFrom(int start) {
+    print('controllers length ${substepControllers.length}');
+    print('focus nodes length ${substepFocusNodes.length}');
+
+    print('controllers range: ${substepControllers.length - start}');
+    print('focus nodes range: ${substepFocusNodes.length - start}');
+    substepControllers.removeRange(start, substepControllers.length);
+    substepFocusNodes.removeRange(start, substepFocusNodes.length);
   }
 }
