@@ -33,19 +33,23 @@ class _CustomCardState extends State<CustomCard> {
       color: Colors.black.withOpacity(0.05),
       child: Row(
         children: [
-          Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              title(),
-              SizedBox(height: kDefaultPadding / 4),
-              subtitle(),
-              SizedBox(height: kDefaultPadding / 2),
-              ...widget.body,
-            ],
+          Expanded(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                title(),
+                SizedBox(height: kDefaultPadding / 4),
+                subtitle(),
+                SizedBox(height: kDefaultPadding / 2),
+                ...widget.body,
+              ],
+            ),
           ),
-          Spacer(),
-          (widget.showDeleteButton) ? deleteButton() : forwardButton()
+          Align(
+            alignment: Alignment.centerRight,
+            child: (widget.showDeleteButton) ? deleteButton() : forwardButton(),
+          ),
         ],
       ),
     );
@@ -69,7 +73,7 @@ class _CustomCardState extends State<CustomCard> {
     );
   }
 
-  Text title() {
+  Widget title() {
     return Text(
       '${widget.title}',
       style: Theme.of(context).textTheme.headline6,

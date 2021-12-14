@@ -14,64 +14,54 @@ import 'package:doctor_mfc_admin/widgets/body_template.dart';
 import 'package:doctor_mfc_admin/widgets/custom_card.dart';
 import 'package:flutter/material.dart';
 
-class ComponentDetailsPage extends StatefulWidget {
+class TestComponentDetailsPage extends StatefulWidget {
   final System system;
   final Component component;
 
-  ComponentDetailsPage({
+  TestComponentDetailsPage({
     Key? key,
     required this.system,
     required this.component,
   }) : super(key: key);
 
   @override
-  _ComponentDetailsPageState createState() => _ComponentDetailsPageState();
+  _TestComponentDetailsPageState createState() =>
+      _TestComponentDetailsPageState();
 }
 
-class _ComponentDetailsPageState extends State<ComponentDetailsPage> {
-  late System system;
-  late Component component;
+class _TestComponentDetailsPageState extends State<TestComponentDetailsPage> {
+  late System system = widget.system;
+  late Component component = widget.component;
 
   late bool manageModeEnabled = false;
 
   @override
   Widget build(BuildContext context) {
-    return StreamBuilder<DocumentSnapshot<System>>(
-        stream: Database().getSystemSnapshotById(widget.system.id),
-        builder: (context, snapshot) {
-          if (snapshot.hasData) {
-            system = snapshot.data!.data()!;
-            component = system.getComponent(widget.component.id);
-
-            return BodyTemplate(
-              title: component.description,
-              subtitle: system.model,
-              body: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    SectionSubheaderWithAddButton(
-                      title: 'Known problems',
-                      addButtonText: 'Add known problem',
-                      onPressed:
-                          (manageModeEnabled) ? null : () => onAddPressed(),
-                    ),
-                    TextButton(
-                      onPressed: () => toggleManageMode(),
-                      child: Text((!manageModeEnabled) ? 'Manage' : 'Finish'),
-                      style: TextButton.styleFrom(
-                        primary: kFontBlack.withOpacity(0.5),
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(height: kDefaultPadding / 2),
-                knownProblemsList(),
-              ],
-            );
-          } else
-            return CustomLoadingIndicator();
-        });
+    return BodyTemplate(
+      title: component.description,
+      subtitle: system.model,
+      body: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            SectionSubheaderWithAddButton(
+              title: 'Known problems',
+              addButtonText: 'Add known problem',
+              onPressed: (manageModeEnabled) ? null : () => onAddPressed(),
+            ),
+            TextButton(
+              onPressed: () => toggleManageMode(),
+              child: Text((!manageModeEnabled) ? 'Manage' : 'Finish'),
+              style: TextButton.styleFrom(
+                primary: kFontBlack.withOpacity(0.5),
+              ),
+            ),
+          ],
+        ),
+        SizedBox(height: kDefaultPadding / 2),
+        knownProblemsList(),
+      ],
+    );
   }
 
   Widget knownProblemsList() {

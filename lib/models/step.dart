@@ -5,10 +5,10 @@ class Step {
   Step({required this.description, List<String>? substeps})
       : this.substeps = substeps ?? [];
 
-  factory Step.fromMap(Map<String, dynamic> map) {
+  factory Step.fromMap(Map<String, dynamic> data) {
     return Step(
-      description: map['description'] as String,
-      substeps: List<String>.from(map['substeps'] ?? []),
+      description: data['description'] as String,
+      substeps: List<String>.from(data['substeps'] ?? []),
     );
   }
 
@@ -17,7 +17,7 @@ class Step {
   Map<String, dynamic> toMap() {
     substeps.removeWhere((substep) => substep.isEmpty);
 
-    return <String, dynamic>{
+    return {
       'description': description,
       'substeps': substeps,
     };

@@ -23,7 +23,7 @@ class Database {
   Stream<QuerySnapshot<System>> getSystemsSnapshots() => systemsRef.snapshots();
 
   Stream<QuerySnapshot<System>> getSystemsByTypeSnapshots(String type) =>
-      systemsRef.where('type', isEqualTo: type).snapshots();
+      systemsRef.where('type', isEqualTo: type.toLowerCase()).snapshots();
 
   Stream<DocumentSnapshot<System>> getSystemSnapshotById(String id) =>
       systemsRef.doc(id).snapshots();

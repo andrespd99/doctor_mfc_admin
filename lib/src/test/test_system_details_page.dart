@@ -6,6 +6,7 @@ import 'package:doctor_mfc_admin/services/database.dart';
 
 import 'package:doctor_mfc_admin/services/test/test_systems_service.dart';
 import 'package:doctor_mfc_admin/src/component_details_page.dart';
+import 'package:doctor_mfc_admin/src/test/test_component_details_page.dart';
 import 'package:doctor_mfc_admin/widgets/alert_elevated_button.dart';
 import 'package:doctor_mfc_admin/widgets/body_template.dart';
 import 'package:doctor_mfc_admin/widgets/component_dialog.dart';
@@ -19,19 +20,19 @@ import 'package:doctor_mfc_admin/widgets/section_subheader_with_add_button.dart'
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-class SystemDetailsPage extends StatefulWidget {
+class TestSystemDetailsPage extends StatefulWidget {
   final System system;
 
-  SystemDetailsPage(
+  TestSystemDetailsPage(
     this.system, {
     Key? key,
   }) : super(key: key);
 
   @override
-  _SystemDetailsPageState createState() => _SystemDetailsPageState();
+  _TestSystemDetailsPageState createState() => _TestSystemDetailsPageState();
 }
 
-class _SystemDetailsPageState extends State<SystemDetailsPage> {
+class _TestSystemDetailsPageState extends State<TestSystemDetailsPage> {
   late System system = widget.system;
 
   final modelController = TextEditingController();
@@ -56,63 +57,50 @@ class _SystemDetailsPageState extends State<SystemDetailsPage> {
 
   @override
   Widget build(BuildContext context) {
-    return StreamBuilder<DocumentSnapshot<System>>(
-        stream: Database().getSystemSnapshotById(system.id),
-        builder: (context, snapshot) {
-          if (snapshot.hasData) {
-            if (snapshot.data!.data() != null) {
-              system = snapshot.data!.data()!;
-
-              return BodyTemplate(
-                title: '${system.model}',
-                body: [
-                  Row(
-                    children: [
-                      SectionSubheader('System information'),
-                      SizedBox(width: kDefaultPadding / 2),
-                      (editingEnabled)
-                          ? Container()
-                          : TextButton(
-                              onPressed: () => toggleEditMode(),
-                              child: Text('Edit',
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .caption
-                                      ?.copyWith(color: Colors.grey)))
-                    ],
-                  ),
-                  SizedBox(height: kDefaultPadding),
-                  attributeInputs(),
-                  SizedBox(height: kDefaultPadding / 2),
-                  confirmEditButton(),
-                  SizedBox(height: kDefaultPadding * 2),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      SectionSubheaderWithAddButton(
-                        title: 'Components',
-                        addButtonText: 'Add component',
-                        onPressed:
-                            (manageModeEnabled) ? null : () => onAddPressed(),
-                      ),
-                      TextButton(
-                        onPressed: () => toggleManageMode(),
-                        child: Text((!manageModeEnabled) ? 'Manage' : 'Finish'),
-                        style: TextButton.styleFrom(
-                          primary: kFontBlack.withOpacity(0.5),
-                        ),
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: kDefaultPadding),
-                  componentsList()
-                ],
-              );
-            } else
-              return Container();
-          } else
-            return CustomLoadingIndicator();
-        });
+    return BodyTemplate(
+      title: '${system.model}',
+      body: [
+        Row(
+          children: [
+            SectionSubheader('System information'),
+            SizedBox(width: kDefaultPadding / 2),
+            (editingEnabled)
+                ? Container()
+                : TextButton(
+                    onPressed: () => toggleEditMode(),
+                    child: Text('Edit',
+                        style: Theme.of(context)
+                            .textTheme
+                            .caption
+                            ?.copyWith(color: Colors.grey)))
+          ],
+        ),
+        SizedBox(height: kDefaultPadding),
+        attributeInputs(),
+        SizedBox(height: kDefaultPadding / 2),
+        confirmEditButton(),
+        SizedBox(height: kDefaultPadding * 2),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            SectionSubheaderWithAddButton(
+              title: 'Components',
+              addButtonText: 'Add component',
+              onPressed: (manageModeEnabled) ? null : () => onAddPressed(),
+            ),
+            TextButton(
+              onPressed: () => toggleManageMode(),
+              child: Text((!manageModeEnabled) ? 'Manage' : 'Finish'),
+              style: TextButton.styleFrom(
+                primary: kFontBlack.withOpacity(0.5),
+              ),
+            ),
+          ],
+        ),
+        SizedBox(height: kDefaultPadding),
+        componentsList()
+      ],
+    );
   }
 
   Row attributeInputs() {
@@ -253,7 +241,7 @@ class _SystemDetailsPageState extends State<SystemDetailsPage> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (_) => ComponentDetailsPage(
+        builder: (_) => TestComponentDetailsPage(
           system: system,
           component: component,
         ),

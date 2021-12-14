@@ -23,16 +23,17 @@ class ManageSystemsPage extends StatefulWidget {
 class _ManageSystemsPageState extends State<ManageSystemsPage> {
   List<String> brands = [];
   List<String> systemTypes = [];
+  late Map<String, int> lengths;
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<Map<String, List<String>>>(
+    return FutureBuilder<Map<String, dynamic>>(
         future: GlobalValues().getGlobalValues(),
         builder: (context, snapshot) {
           if (snapshot.hasData) {
             // Set global values.
-            brands = snapshot.data!['brands'] ?? [];
-            systemTypes = snapshot.data!['systemTypes'] ?? [];
+            brands = List.from(snapshot.data!['brands'] ?? []);
+            systemTypes = List.from(snapshot.data!['systemTypes'] ?? []);
 
             return BodyTemplate(
               title: 'Manage systems',
@@ -97,8 +98,6 @@ class _ManageSystemsPageState extends State<ManageSystemsPage> {
                     // Get List of Systems from query snapshots.
                     List<System> systems =
                         snapshot.data!.docs.map((e) => e.data()).toList();
-                    print(type);
-                    print(systems.length);
 
                     return ListView.separated(
                       shrinkWrap: true,

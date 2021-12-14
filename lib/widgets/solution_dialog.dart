@@ -55,8 +55,8 @@ class _SolutionDialogState extends State<SolutionDialog> {
         instructionsController.text = solution.instructions!;
       }
 
-      videoLinkController.text =
-          (solution.guideLink != null) ? solution.guideLink! : '';
+      // videoLinkController.text =
+      //     (solution.links != null) ? solution.links! : '';
     }
 
     super.initState();
@@ -499,14 +499,12 @@ class _SolutionDialogState extends State<SolutionDialog> {
     if (steps.last.description.isEmpty) steps.removeLast();
 
     widget.callback(new Solution(
-      id: Uuid().v4(),
-      description: descriptionController.text,
-      instructions: instructionsController.text,
-      steps: (isStepBased!) ? steps : null,
-      guideLink: (videoLinkController.text.isNotEmpty)
-          ? videoLinkController.text
-          : null,
-    ));
+        id: Uuid().v4(),
+        description: descriptionController.text,
+        instructions: instructionsController.text,
+        steps: (isStepBased!) ? steps : null,
+        links: [] // TODO: Add links.
+        ));
 
     Navigator.pop(context);
   }
@@ -573,11 +571,6 @@ class StepController {
   }
 
   void removeSubstepControllersFrom(int start) {
-    print('controllers length ${substepControllers.length}');
-    print('focus nodes length ${substepFocusNodes.length}');
-
-    print('controllers range: ${substepControllers.length - start}');
-    print('focus nodes range: ${substepFocusNodes.length - start}');
     substepControllers.removeRange(start, substepControllers.length);
     substepFocusNodes.removeRange(start, substepFocusNodes.length);
   }

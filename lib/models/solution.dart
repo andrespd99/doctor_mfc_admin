@@ -1,3 +1,4 @@
+import 'package:doctor_mfc_admin/models/guide_link.dart';
 import 'package:doctor_mfc_admin/models/step.dart';
 
 class Solution {
@@ -5,7 +6,7 @@ class Solution {
   final String description;
   final String? instructions;
   final String? imageUrl;
-  final String? guideLink;
+  final List<GuideLink>? links;
 
   List<Step>? steps;
 
@@ -15,24 +16,17 @@ class Solution {
     this.instructions,
     this.steps,
     this.imageUrl,
-    this.guideLink,
+    this.links,
   });
 
   factory Solution.fromMap(Map<String, dynamic> data) {
-    List<Step> steps = [];
-
-    final stepsMap = List<Map<String, dynamic>>.from(data['steps'] ?? []);
-
-    stepsMap
-        .forEach((Map<String, dynamic> map) => steps.add(Step.fromMap(map)));
-
     return Solution(
       id: data['id'],
       description: data['description'],
       instructions: data['instructions'],
-      steps: steps,
       imageUrl: data['imageUrl'],
-      guideLink: data['guideLink'],
+      links: _getLinksFromMap(List.from(data['links'] ?? [])),
+      steps: _getStepsFromMap(List.from(data['steps'] ?? [])),
     );
   }
 
@@ -44,9 +38,25 @@ class Solution {
       'description': description,
       'instructions': instructions,
       'imageUrl': imageUrl,
-      'guideLink': guideLink,
-      'steps': steps?.map((Step step) => step.toMap()).toList(),
+      'links': links?.map((link) => link.toMap()).toList(),
+      'steps': steps?.map((step) => step.toMap()).toList(),
     };
+  }
+
+  /// Returns a List of [Step] from a json map.
+  static List<Step> _getStepsFromMap(List<Map<String, dynamic>>? data) {
+    if (data != null)
+      return data.map((stepsData) => Step.fromMap(stepsData)).toList();
+    else
+      return [];
+  }
+
+  /// Returns a List of [GuideLink] from a json map.
+  static List<GuideLink> _getLinksFromMap(List<Map<String, dynamic>>? data) {
+    if (data != null)
+      return data.map((linkData) => GuideLink.fromMap(linkData)).toList();
+    else
+      return [];
   }
 
   addStep(Step step) {

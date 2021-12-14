@@ -29,7 +29,7 @@ class GlobalValues {
     return brands;
   }
 
-  Future<Map<String, List<String>>> getGlobalValues() async {
+  Future<Map<String, dynamic>> getGlobalValues() async {
     final systemTypes = await getSystemTypes();
     final brands = await getBrands();
 
