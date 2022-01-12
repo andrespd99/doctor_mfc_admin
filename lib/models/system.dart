@@ -6,7 +6,7 @@ import 'package:doctor_mfc_admin/models/user_response.dart';
 
 class System {
   final String id;
-  String model;
+  String description;
   String brand;
 
   final String type;
@@ -14,7 +14,7 @@ class System {
 
   System({
     required this.id,
-    required this.model,
+    required this.description,
     required this.type,
     required this.brand,
     required this.components,
@@ -26,7 +26,7 @@ class System {
   }) {
     return System(
       id: id,
-      model: data['description'],
+      description: data['description'],
       type: data['type'],
       brand: data['brand'],
       components: _componentsFromMap(List.from(data['components'] ?? [])),
@@ -35,10 +35,17 @@ class System {
 
   Map<String, dynamic> toMap() {
     return {
-      'description': model,
+      'description': description,
       'type': type,
       'brand': brand,
       'components': _componentsToMap(),
+    };
+  }
+
+  Map<String, dynamic> searchResultToMap() {
+    return {
+      'entityTypeId': '001',
+      ...this.toMap(),
     };
   }
 
@@ -102,8 +109,7 @@ class System {
   List<Solution> get solutions {
     List<Solution> solutions = [];
 
-    userResponses
-        .forEach((response) => solutions.addAll(response.solutions ?? []));
+    userResponses.forEach((response) => solutions.addAll(response.solutions));
 
     return solutions;
   }

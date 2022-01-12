@@ -57,7 +57,7 @@ class Component {
     List<Solution> solutions = [];
     problems.forEach((problem) {
       problem.userResponses.forEach((response) {
-        solutions.addAll(response.solutions ?? []);
+        solutions.addAll(response.solutions);
       });
     });
     return solutions;

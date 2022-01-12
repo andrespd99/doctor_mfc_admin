@@ -46,7 +46,7 @@ class _UserResponseDialogState extends State<UserResponseDialog> {
       UserResponse userResponse = widget.userResponse!;
       descriptionController.text = userResponse.description;
       isOkResponse = userResponse.isOkResponse;
-      solutions = userResponse.solutions ?? [];
+      solutions = userResponse.solutions;
     }
     super.initState();
   }

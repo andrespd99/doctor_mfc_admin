@@ -58,7 +58,7 @@ class UserResponseElevatedButton extends StatelessWidget {
     if (response.isOkResponse == false) {
       // This is a failing response
       // Show how many solutions are linked to this response.
-      return 'Edit solutions (${response.solutions?.length})';
+      return 'Edit solutions (${response.solutions.length})';
     } else if (response.isOkResponse && response.isEditable == false) {
       // This is a 'Yes' response. Edition is disabled.
       return '';

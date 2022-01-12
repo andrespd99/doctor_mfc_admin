@@ -1,4 +1,5 @@
 import 'package:doctor_mfc_admin/models/solution.dart';
+import 'package:doctor_mfc_admin/models/system.dart';
 import 'package:doctor_mfc_admin/models/user_response.dart';
 
 class Problem {
@@ -7,7 +8,7 @@ class Problem {
   final String question;
   final List<String> keywords;
   final List<UserResponse> userResponses;
-  // final Object guidance;
+  final bool isMultiOptions;
 
   Problem({
     required this.id,
@@ -15,6 +16,7 @@ class Problem {
     required this.question,
     required this.keywords,
     required this.userResponses,
+    required this.isMultiOptions,
   });
 
   factory Problem.fromMap(Map<String, dynamic> data) {
@@ -24,16 +26,35 @@ class Problem {
       question: data['question'],
       keywords: List.from(data['keywords']),
       userResponses: _getResponses(List.from(data['userResponses'] ?? [])),
+      isMultiOptions: data['isMultiOptions'],
     );
   }
 
-  Map<String, dynamic> toMap() {
-    return {
+  Map<String, dynamic> toMap([System? system]) {
+    final map = {
       'id': id,
       'description': description,
       'question': question,
       'keywords': keywords,
       'userResponses': _responsesToMap(),
+      'isMultiOptions': isMultiOptions,
+    };
+
+    // If systemId is provided, add it to the map.
+    if (system != null)
+      map.addAll({
+        'systemId': system.id,
+        'systemDescription': system.description,
+        'systemBrand': system.brand,
+      });
+
+    return map;
+  }
+
+  Map<String, dynamic> searchResultToMap(System system) {
+    return {
+      'entityTypeId': '002',
+      ...this.toMap(system),
     };
   }
 
@@ -66,7 +87,7 @@ class Problem {
     List<Solution> solutions = [];
 
     userResponses.forEach((response) {
-      solutions.addAll(response.solutions ?? []);
+      solutions.addAll(response.solutions);
     });
 
     return solutions;

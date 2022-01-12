@@ -1,4 +1,6 @@
+import 'package:doctor_mfc_admin/models/problem.dart';
 import 'package:doctor_mfc_admin/models/solution.dart';
+import 'package:doctor_mfc_admin/models/system.dart';
 
 class UserResponse {
   final String id;
@@ -23,22 +25,21 @@ class UserResponse {
   ///
   /// The description attribute should be clear enough to distinguish easily between
   /// a failing and a working response.
-  final bool isOkResponse;
-  final List<Solution>? solutions;
+  bool isOkResponse;
+  final List<Solution> solutions = [];
 
-  /// This is an auxiliary attribute to make non-editable the 'Yes' response
+  /// This is an auxiliary attribute to make non-editable the OK response
   /// on binary questions.
-  ///
-  /// Should only be set to false when the above is the case.
-  final bool isEditable;
+  bool get isEditable => !isOkResponse;
 
   UserResponse({
     required this.id,
     required this.description,
     required this.isOkResponse,
-    this.solutions,
-    this.isEditable = true,
-  });
+    List<Solution>? solutions,
+  }) {
+    if (solutions != null) this.solutions.addAll(solutions);
+  }
 
   factory UserResponse.fromMap(Map<String, dynamic> data) {
     return UserResponse(
@@ -54,13 +55,29 @@ class UserResponse {
       'id': id,
       'description': description,
       'isOkResponse': isOkResponse,
-      if (solutions != null) 'solutions': _solutionsToMap(),
+      'solutions': _solutionsToMap(),
+    };
+  }
+
+  Map<String, dynamic> searchResultToMap({
+    required Problem problem,
+    required System system,
+  }) {
+    return {
+      'entityTypeId': '003',
+      'problemId': problem.id,
+      'problemDescription': problem.description,
+      'systemId': system.id,
+      'systemDescription': system.description,
+      'systemBrand': system.brand,
+      'sypmton': (problem.isMultiOptions == true) ? this.description : null,
+      'solutions': _solutionsToMap(),
     };
   }
 
   /// Converts the List of [Solution]s to a json map.
   List<Map<String, dynamic>>? _solutionsToMap() =>
-      solutions?.map((solution) => solution.toMap()).toList();
+      solutions.map((solution) => solution.toMap()).toList();
 
   /// Returns a List of [Solution] from a json map.
   static List<Solution> _getSolutions(List<Map<String, dynamic>>? data) {

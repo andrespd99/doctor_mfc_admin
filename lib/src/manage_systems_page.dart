@@ -108,7 +108,7 @@ class _ManageSystemsPageState extends State<ManageSystemsPage> {
                         return Align(
                           alignment: Alignment.centerLeft,
                           child: CustomCard(
-                            title: '${system.brand} ${system.model}',
+                            title: '${system.brand} ${system.description}',
                             body: [
                               Text('${system.components.length} components'),
                               SizedBox(height: kDefaultPadding / 4),

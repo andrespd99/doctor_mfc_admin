@@ -45,7 +45,7 @@ class _ComponentDetailsPageState extends State<ComponentDetailsPage> {
 
             return BodyTemplate(
               title: component.description,
-              subtitle: system.model,
+              subtitle: system.description,
               body: [
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,

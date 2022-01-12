@@ -4,9 +4,7 @@ import 'package:doctor_mfc_admin/models/component.dart';
 import 'package:doctor_mfc_admin/models/system.dart';
 import 'package:doctor_mfc_admin/services/database.dart';
 
-import 'package:doctor_mfc_admin/services/test/test_systems_service.dart';
 import 'package:doctor_mfc_admin/src/component_details_page.dart';
-import 'package:doctor_mfc_admin/widgets/alert_elevated_button.dart';
 import 'package:doctor_mfc_admin/widgets/body_template.dart';
 import 'package:doctor_mfc_admin/widgets/component_dialog.dart';
 import 'package:doctor_mfc_admin/widgets/custom_card.dart';
@@ -47,7 +45,7 @@ class _SystemDetailsPageState extends State<SystemDetailsPage> {
 
   @override
   void initState() {
-    modelController.text = system.model;
+    modelController.text = system.description;
     brandController.text = system.brand;
     typeController.text = system.type;
 
@@ -64,7 +62,7 @@ class _SystemDetailsPageState extends State<SystemDetailsPage> {
               system = snapshot.data!.data()!;
 
               return BodyTemplate(
-                title: '${system.model}',
+                title: '${system.description}',
                 body: [
                   Row(
                     children: [
@@ -154,7 +152,8 @@ class _SystemDetailsPageState extends State<SystemDetailsPage> {
                 SizedBox(height: kDefaultPadding / 4),
                 Text('${component.solutions.length} solutions'),
               ],
-              onPressed: () => goToComponentDetails(component, system.model),
+              onPressed: () =>
+                  goToComponentDetails(component, system.description),
               showDeleteButton: manageModeEnabled,
               onDelete: () => promptComponentDelete(component),
             ),
@@ -227,7 +226,7 @@ class _SystemDetailsPageState extends State<SystemDetailsPage> {
 
   void updateSystem() async {
     system.brand = brand;
-    system.model = model;
+    system.description = model;
 
     await futureLoadingIndicator(context, Database().updateSystem(system));
 
@@ -242,7 +241,7 @@ class _SystemDetailsPageState extends State<SystemDetailsPage> {
 
   void cancelChanges() {
     setState(() {
-      modelController.text = system.model;
+      modelController.text = system.description;
       brandController.text = system.brand;
       typeController.text = system.type;
       editingEnabled = false;
@@ -266,7 +265,7 @@ class _SystemDetailsPageState extends State<SystemDetailsPage> {
         context: context,
         builder: (context) {
           return AlertDialog(
-            title: Text('Delete ${system.model}'),
+            title: Text('Delete ${system.description}'),
             content: Text(
               """Are you sure you want to delete this system? 
                 You can't revert this action.""",

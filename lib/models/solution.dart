@@ -1,5 +1,7 @@
 import 'package:doctor_mfc_admin/models/guide_link.dart';
+import 'package:doctor_mfc_admin/models/problem.dart';
 import 'package:doctor_mfc_admin/models/step.dart';
+import 'package:doctor_mfc_admin/models/system.dart';
 
 class Solution {
   final String id;

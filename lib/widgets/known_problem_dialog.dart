@@ -43,7 +43,7 @@ class _KnownProblemDialogState extends State<KnownProblemDialog> {
 
   /// Whether this question is a yes/no (binary) question or a multiple options
   /// question.
-  bool? isBinaryQuestion;
+  bool? isMultiOptions;
 
   String get question => questionController.text;
 
@@ -70,6 +70,7 @@ class _KnownProblemDialogState extends State<KnownProblemDialog> {
       questionController.text = problem.question;
       keywords = problem.keywords;
       userResponses = problem.userResponses;
+      isMultiOptions = problem.isMultiOptions;
     }
     super.initState();
   }
@@ -90,7 +91,7 @@ class _KnownProblemDialogState extends State<KnownProblemDialog> {
         SizedBox(height: kDefaultPadding),
         // First, user has to select what type of question this is
         // (in askQuestionTypeSection()), then the user responses section is shown.
-        (userResponses.isEmpty && isBinaryQuestion == null)
+        (userResponses.isEmpty && isMultiOptions == null)
             ? askQuestionTypeSection()
             : userResponsesSection(),
       ],
@@ -134,7 +135,8 @@ class _KnownProblemDialogState extends State<KnownProblemDialog> {
       children: [
         SectionSubheaderWithAddButton(
           title: 'User responses',
-          onPressed: () => navigateToResponseCreation(),
+          onPressed:
+              (isMultiOptions!) ? () => navigateToResponseCreation() : null,
           addButtonText: 'Add responses',
         ),
         SizedBox(height: kDefaultPadding / 4),
@@ -156,7 +158,26 @@ class _KnownProblemDialogState extends State<KnownProblemDialog> {
                 SizedBox(width: kDefaultPadding / 2),
           ),
         ),
+        SizedBox(height: kDefaultPadding / 2),
+        (isMultiOptions == false) ? swapOkResponseButton() : Container(),
       ],
+    );
+  }
+
+  Widget swapOkResponseButton() {
+    return TextButton(
+      style: TextButton.styleFrom(primary: kSecondaryColor),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.swap_horiz),
+          SizedBox(width: kDefaultPadding / 3),
+          Text(
+            'Swap OK response',
+          ),
+        ],
+      ),
+      onPressed: () => swapOkResponse(),
     );
   }
 
@@ -423,33 +444,32 @@ class _KnownProblemDialogState extends State<KnownProblemDialog> {
         keywords: keywords,
         question: questionController.text,
         userResponses: userResponses,
+        isMultiOptions: this.isMultiOptions!,
       ),
     );
   }
 
   /// Sets the question of this [KnownProblem] as a binary question.
   void setAsBinaryQuestion() {
-    isBinaryQuestion = true;
+    isMultiOptions = false;
     userResponses.addAll([
       // Add 'Yes' response.
       UserResponse(
         id: Uuid().v4(),
         isOkResponse: true,
         description: 'Yes',
-        isEditable: false,
       ),
       // Add 'No' response.
       UserResponse(
         id: Uuid().v4(),
         isOkResponse: false,
         description: 'No',
-        solutions: [],
       )
     ]);
   }
 
   void setAsMultiOptionQuestion() {
-    isBinaryQuestion = false;
+    isMultiOptions = true;
   }
 
   /// In order for this question to be valid, there has to be at least one
@@ -470,5 +490,58 @@ class _KnownProblemDialogState extends State<KnownProblemDialog> {
     });
 
     return hasOkResponse && hasNotOkResponse;
+  }
+
+  void swapOkResponse() {
+    final notOkResponse =
+        userResponses.firstWhere((response) => response.isOkResponse == false);
+
+    if (notOkResponse.solutions.length > 0)
+      promptSwapOkResponse();
+    else
+      setState(() {
+        userResponses.forEach((response) {
+          response.isOkResponse = !response.isOkResponse;
+        });
+      });
+  }
+
+  promptSwapOkResponse() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text('Confirm swapping responses'),
+          content: Text(
+              'Are you sure you want to swap the OK response? This will also delete the solutions of the current OK response.'),
+          actions: [
+            ElevatedButton(
+              child: Text('Cancel'),
+              onPressed: () => Navigator.pop(context),
+              style: ElevatedButton.styleFrom(
+                primary: kAccentColor,
+              ),
+            ),
+            ElevatedButton(
+              child: Text('Swap'),
+              onPressed: () {
+                setState(() {
+                  // Clear all solutions of the current failing response.
+                  userResponses
+                      .firstWhere((response) => response.isOkResponse == false)
+                      .solutions
+                      .clear();
+                  // Swap responses
+                  userResponses.forEach((response) {
+                    response.isOkResponse = !response.isOkResponse;
+                  });
+                });
+                Navigator.pop(context);
+              },
+            ),
+          ],
+        );
+      },
+    );
   }
 }

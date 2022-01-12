@@ -64,15 +64,15 @@ class _AddSystemPageState extends State<AddSystemPage> {
         onPressed: (canFinish())
             ? () => futureLoadingIndicator(
                   context,
-                  Database().addSystem(
+                  Database().addSystems([
                     System(
                       id: Uuid().v4(),
-                      model: modelController.text,
+                      description: modelController.text,
                       brand: brandController.text,
                       type: typeController.text,
                       components: components,
                     ),
-                  ),
+                  ]),
                 ).then(
                   (_) => onComplete(),
                   onError: (err, stack) => onError(err, stack),
