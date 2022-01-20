@@ -1,12 +1,13 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:doctor_mfc_admin/constants.dart';
-import 'package:doctor_mfc_admin/models/component.dart';
+import 'package:doctor_mfc_admin/models/problem.dart';
+
 import 'package:doctor_mfc_admin/models/system.dart';
 import 'package:doctor_mfc_admin/services/database.dart';
+import 'package:doctor_mfc_admin/src/problem_page.dart';
 
-import 'package:doctor_mfc_admin/src/component_details_page.dart';
 import 'package:doctor_mfc_admin/widgets/body_template.dart';
-import 'package:doctor_mfc_admin/widgets/component_dialog.dart';
+
 import 'package:doctor_mfc_admin/widgets/custom_card.dart';
 import 'package:doctor_mfc_admin/widgets/custom_loading_indicator.dart';
 import 'package:doctor_mfc_admin/widgets/future_loading_indicator.dart';
@@ -84,26 +85,17 @@ class _SystemDetailsPageState extends State<SystemDetailsPage> {
                   SizedBox(height: kDefaultPadding / 2),
                   confirmEditButton(),
                   SizedBox(height: kDefaultPadding * 2),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      SectionSubheaderWithAddButton(
-                        title: 'Components',
-                        addButtonText: 'Add component',
-                        onPressed:
-                            (manageModeEnabled) ? null : () => onAddPressed(),
-                      ),
-                      TextButton(
-                        onPressed: () => toggleManageMode(),
-                        child: Text((!manageModeEnabled) ? 'Manage' : 'Finish'),
-                        style: TextButton.styleFrom(
-                          primary: kFontBlack.withOpacity(0.5),
-                        ),
-                      ),
-                    ],
+                  SectionSubheaderWithButton(
+                    title: 'Problems',
+                    buttonText: 'Add problem',
+                    onPressed:
+                        (manageModeEnabled) ? null : () => onAddPressed(),
+                    enableManageButton: true,
+                    onManageButtonPressed: () => toggleManageMode(),
+                    manageModeEnabled: manageModeEnabled,
                   ),
                   SizedBox(height: kDefaultPadding),
-                  componentsList()
+                  problemsList()
                 ],
               );
             } else
@@ -135,27 +127,24 @@ class _SystemDetailsPageState extends State<SystemDetailsPage> {
     );
   }
 
-  Widget componentsList() {
-    if (system.components.isNotEmpty) {
+  Widget problemsList() {
+    if (system.problems.isNotEmpty) {
       return ListView.separated(
         shrinkWrap: true,
-        itemCount: system.components.length,
+        itemCount: system.problems.length,
         itemBuilder: (context, i) {
-          Component component = system.components[i];
+          Problem problem = system.problems[i];
 
           return Align(
             alignment: Alignment.centerLeft,
             child: CustomCard(
-              title: component.description,
+              title: problem.description,
               body: [
-                Text('${component.problems.length} known problems'),
-                SizedBox(height: kDefaultPadding / 4),
-                Text('${component.solutions.length} solutions'),
+                Text('${problem.solutions.length} solutions'),
               ],
-              onPressed: () =>
-                  goToComponentDetails(component, system.description),
+              onPressed: () => goToProblemDetails(problem, system.description),
               showDeleteButton: manageModeEnabled,
-              onDelete: () => promptComponentDelete(component),
+              onDelete: () => promptProblemDelete(problem),
             ),
           );
         },
@@ -224,10 +213,12 @@ class _SystemDetailsPageState extends State<SystemDetailsPage> {
       return Container();
   }
 
-  void updateSystem() async {
+  void updateSystem({Problem? problem, Problem? updatedProblem}) async {
     system.brand = brand;
     system.description = model;
-
+    if (problem != null && updatedProblem != null) {
+      system.problems[system.problems.indexOf(problem)] = updatedProblem;
+    }
     await futureLoadingIndicator(context, Database().updateSystem(system));
 
     setState(() {});
@@ -248,13 +239,16 @@ class _SystemDetailsPageState extends State<SystemDetailsPage> {
     });
   }
 
-  goToComponentDetails(Component component, String model) {
+  goToProblemDetails(Problem problem, String model) {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (_) => ComponentDetailsPage(
-          system: system,
-          component: component,
+        builder: (_) => ProblemPage(
+          callback: (updatedProblem) {
+            updateSystem(problem: problem, updatedProblem: updatedProblem);
+          },
+          subtitle: '$model',
+          problem: problem,
         ),
       ),
     );
@@ -295,16 +289,17 @@ class _SystemDetailsPageState extends State<SystemDetailsPage> {
         });
   }
 
-  void onAddPressed() => showDialog(
-        context: context,
-        builder: (context) => ComponentDialog(
-          systemName: model,
-          callback: (component) => addComponent(component),
+  void onAddPressed() => Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (context) => ProblemPage(
+            subtitle: model,
+            callback: (problem) => addProblem(problem),
+          ),
         ),
       );
 
-  void addComponent(Component component) {
-    system.addComponent(component);
+  void addProblem(Problem problem) {
+    system.problems.add(problem);
 
     futureLoadingIndicator(context, Database().updateSystem(system));
   }
@@ -316,25 +311,18 @@ class _SystemDetailsPageState extends State<SystemDetailsPage> {
     });
   }
 
-  void onDelete(Component component) {
-    system.deleteComponent(component);
-
-    futureLoadingIndicator(context, Database().updateSystem(system))
-        .then((value) => Navigator.pop(context));
-  }
-
-  void promptComponentDelete(Component component) {
+  void promptProblemDelete(Problem problem) {
     showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: Text('Delete ${component.description}'),
-          content: Text('Are you sure you want to delete this component?'),
+          title: Text('Delete problem'),
+          content: Text('Are you sure you want to delete this known problem?'),
           buttonPadding: EdgeInsets.all(kDefaultPadding),
           actionsAlignment: MainAxisAlignment.spaceBetween,
           actions: [
             TextButton(
-              onPressed: () => onDelete(component),
+              onPressed: () => onDelete(problem),
               child: Text('Delete'),
               style: TextButton.styleFrom(primary: kAccentColor),
             ),
@@ -346,5 +334,12 @@ class _SystemDetailsPageState extends State<SystemDetailsPage> {
         );
       },
     );
+  }
+
+  void onDelete(Problem problem) {
+    system.deleteProblem(problem);
+
+    futureLoadingIndicator(context, Database().updateSystem(system))
+        .then((value) => Navigator.pop(context));
   }
 }

@@ -1,6 +1,8 @@
 import 'package:doctor_mfc_admin/constants.dart';
 import 'package:doctor_mfc_admin/models/drawer_item.dart';
+import 'package:doctor_mfc_admin/models/enums/attachment_type.dart';
 import 'package:doctor_mfc_admin/services/page_change_service.dart';
+import 'package:doctor_mfc_admin/src/files_page.dart';
 import 'package:doctor_mfc_admin/src/home_page.dart';
 import 'package:doctor_mfc_admin/src/manage_systems_page.dart';
 import 'package:doctor_mfc_admin/widgets/custom_progress_indicator.dart';
@@ -28,8 +30,26 @@ class _IndexPageState extends State<IndexPage>
         child: HomePage(),
       ),
       1: DrawerItem(
-        title: 'Manage systems',
+        title: 'Systems',
         child: ManageSystemsPage(),
+      ),
+      2: DrawerItem(
+        title: 'Documentation',
+        child: FilesPage(
+          type: AttachmentType.DOCUMENTATION,
+          key: UniqueKey(),
+        ),
+      ),
+      3: DrawerItem(
+        title: 'How-to guides',
+        child: FilesPage(
+          type: AttachmentType.GUIDE,
+          key: UniqueKey(),
+        ),
+      ),
+      4: DrawerItem(
+        title: 'Log out',
+        child: Container(),
       ),
     },
   );

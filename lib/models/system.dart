@@ -1,8 +1,5 @@
-import 'package:doctor_mfc_admin/models/component.dart';
 import 'package:doctor_mfc_admin/models/problem.dart';
 import 'package:doctor_mfc_admin/models/solution.dart';
-
-import 'package:doctor_mfc_admin/models/user_response.dart';
 
 class System {
   final String id;
@@ -10,14 +7,14 @@ class System {
   String brand;
 
   final String type;
-  final List<Component> components;
+  final List<Problem> problems;
 
   System({
     required this.id,
     required this.description,
     required this.type,
     required this.brand,
-    required this.components,
+    required this.problems,
   });
 
   factory System.fromMap({
@@ -29,87 +26,33 @@ class System {
       description: data['description'],
       type: data['type'],
       brand: data['brand'],
-      components: _componentsFromMap(List.from(data['components'] ?? [])),
+      problems: List.from(data['problems'])
+          .map((problemData) => Problem.fromMap(problemData))
+          .toList(),
+      // components: _componentsFromMap(List.from(data['components'] ?? [])),
     );
   }
 
   Map<String, dynamic> toMap() {
     return {
       'description': description,
-      'type': type,
+      'type': type.toLowerCase(),
       'brand': brand,
-      'components': _componentsToMap(),
+      'problems': problems.map((problem) => problem.toMap()).toList(),
+      // 'components': _componentsToMap(),
     };
   }
 
-  Map<String, dynamic> searchResultToMap() {
-    return {
-      'entityTypeId': '001',
-      ...this.toMap(),
-    };
-  }
-
-  /// Converts a List of [Component]s to a json map.
-  List<Map<String, dynamic>> _componentsToMap() {
-    return components.map((component) => component.toMap()).toList();
-  }
-
-  /// Converts a json map to a List of [Component]s.
-  static List<Component> _componentsFromMap(List<Map<String, dynamic>>? data) {
-    if (data != null)
-      return data
-          .map((componentData) => Component.fromMap(componentData))
-          .toList();
-    else
-      return [];
-  }
-
-  void addComponent(Component component) => components.add(component);
-
-  /// Get component by `id`
-  Component getComponent(String id) {
-    return components.firstWhere(
-      (component) => component.id == id,
-      orElse: () => throw Exception(),
-    );
-  }
-
-  /// Updates the information of the given component for this system.
-  void updateComponent(Component componentUpdated) {
-    components.forEach((component) {
-      if (component.id == componentUpdated.id) {
-        component = componentUpdated;
-      }
-    });
-  }
-
-  void deleteComponent(Component component) {
-    components.remove(component);
+  void deleteProblem(Problem problem) {
+    problems.remove(problem);
   }
 
 /* --------------------------------- Getters -------------------------------- */
 
-  List<Problem> get knownProblems {
-    List<Problem> knownProblems = [];
-
-    components.forEach((component) => knownProblems.addAll(component.problems));
-
-    return knownProblems;
-  }
-
-  List<UserResponse> get userResponses {
-    List<UserResponse> userResponses = [];
-
-    knownProblems
-        .forEach((problem) => userResponses.addAll(problem.userResponses));
-
-    return userResponses;
-  }
-
   List<Solution> get solutions {
     List<Solution> solutions = [];
 
-    userResponses.forEach((response) => solutions.addAll(response.solutions));
+    problems.forEach((problem) => solutions.addAll(problem.solutions));
 
     return solutions;
   }

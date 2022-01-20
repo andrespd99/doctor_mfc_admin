@@ -1,10 +1,10 @@
 import 'package:doctor_mfc_admin/constants.dart';
-import 'package:doctor_mfc_admin/models/component.dart';
+import 'package:doctor_mfc_admin/models/problem.dart';
 
 import 'package:doctor_mfc_admin/models/system.dart';
 import 'package:doctor_mfc_admin/services/database.dart';
+import 'package:doctor_mfc_admin/src/problem_page.dart';
 
-import 'package:doctor_mfc_admin/widgets/component_dialog.dart';
 import 'package:doctor_mfc_admin/widgets/base_input.dart';
 
 import 'package:doctor_mfc_admin/widgets/body_template.dart';
@@ -28,7 +28,7 @@ class _AddSystemPageState extends State<AddSystemPage> {
   final brandController = TextEditingController();
   final typeController = TextEditingController();
 
-  late List<Component> components = [];
+  List<Problem> problems = [];
 
   // Getters
   String get systemModel => modelController.text;
@@ -41,13 +41,13 @@ class _AddSystemPageState extends State<AddSystemPage> {
       body: BodyTemplate(
         title: 'Add new system',
         body: [
-          Row(
+          Column(
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               attributeInputs(),
-              Spacer(),
-              componentsColumn(),
+              SizedBox(height: kDefaultPadding),
+              problemsList(),
             ],
           ),
           SizedBox(height: kDefaultPadding * 3),
@@ -70,7 +70,7 @@ class _AddSystemPageState extends State<AddSystemPage> {
                       description: modelController.text,
                       brand: brandController.text,
                       type: typeController.text,
-                      components: components,
+                      problems: problems,
                     ),
                   ]),
                 ).then(
@@ -82,92 +82,89 @@ class _AddSystemPageState extends State<AddSystemPage> {
     );
   }
 
-  Widget componentsColumn() {
+  Widget problemsList() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        SectionSubheaderWithAddButton(
-          title: 'Components',
-          onPressed: () => openComponentCreationDialog(),
-          addButtonText: 'Add component',
+        SectionSubheaderWithButton(
+          title: 'Problems',
+          onPressed: () => navigateToProblemAdd(),
+          buttonText: 'Add problem',
         ),
         SizedBox(height: kDefaultPadding / 2),
-        SizedBox(
-          height: 250,
-          width: 300,
-          child: ListView.separated(
-            shrinkWrap: true,
-            itemCount: components.length,
-            itemBuilder: (context, i) => ObjectElevatedButton(
-              title: '${components[i].description}',
-              onPressed: () => openComponentUpdateDialog(
-                component: components[i],
-                index: i,
-              ),
+        ListView.separated(
+          shrinkWrap: true,
+          itemCount: problems.length,
+          itemBuilder: (context, i) => ObjectElevatedButton(
+            title: '${problems[i].description}',
+            onPressed: () => navigateToProblemUpdate(
+              problem: problems[i],
+              index: i,
             ),
-            separatorBuilder: (context, i) =>
-                SizedBox(height: kDefaultPadding / 2),
           ),
+          separatorBuilder: (context, i) =>
+              SizedBox(height: kDefaultPadding / 2),
         )
       ],
     );
   }
 
-  Column attributeInputs() {
-    return Column(
-      children: [
-        attributeInput(title: 'Model', controller: modelController),
-        SizedBox(height: kDefaultPadding),
-        attributeInput(title: 'Brand', controller: brandController),
-        SizedBox(height: kDefaultPadding),
-        attributeInput(title: 'Type', controller: typeController),
-      ],
+  Widget attributeInputs() {
+    return Container(
+      child: Row(
+        children: [
+          attributeInput(title: 'Model', controller: modelController),
+          SizedBox(width: kDefaultPadding),
+          attributeInput(title: 'Brand', controller: brandController),
+          SizedBox(width: kDefaultPadding),
+          attributeInput(title: 'Type', controller: typeController),
+        ],
+      ),
     );
   }
 
   Widget attributeInput(
       {required String title, required TextEditingController controller}) {
-    return BaseInput(
-      title: title,
-      controller: controller,
-      width: 300,
+    return Expanded(
+      child: BaseInput(
+        title: title,
+        controller: controller,
+        // width: 300,
+      ),
     );
   }
 
-  void openComponentCreationDialog() {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return ComponentDialog(
-          systemName: '$systemModel',
-          callback: (newComponent) => createComponent(newComponent),
-        );
-      },
-    );
-  }
+  void navigateToProblemAdd() => Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (context) => ProblemPage(
+            subtitle: '$systemModel',
+            callback: (problem) => addProblem(problem),
+          ),
+        ),
+      );
 
-  void openComponentUpdateDialog(
-      {required Component component, required int index}) {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return ComponentDialog(
-          systemName: '$systemModel',
-          callback: (newComponent) =>
-              updateComponent(component: newComponent, index: index),
-          component: component,
-        );
-      },
-    );
-  }
+  void navigateToProblemUpdate({
+    required Problem problem,
+    required int index,
+  }) =>
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => ProblemPage(
+            problem: problem,
+            callback: (updatedProblem) =>
+                updateProblem(problem: updatedProblem, index: index),
+            subtitle: '$systemModel',
+          ),
+        ),
+      );
 
-  void createComponent(Component newComponent) {
-    components.add(newComponent);
+  void addProblem(Problem problem) {
+    problems.add(problem);
     setState(() {});
   }
 
-  void updateComponent({required Component component, required int index}) {
-    components[index] = component;
+  void updateProblem({required Problem problem, required int index}) {
+    problems[index] = problem;
     setState(() {});
   }
 
@@ -176,7 +173,7 @@ class _AddSystemPageState extends State<AddSystemPage> {
     modelController.clear();
     brandController.clear();
 
-    components = [];
+    problems = [];
   }
 
   void onComplete() {

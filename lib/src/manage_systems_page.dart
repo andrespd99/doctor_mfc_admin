@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:doctor_mfc_admin/constants.dart';
 import 'package:doctor_mfc_admin/models/system.dart';
+import 'package:doctor_mfc_admin/services/current_system_selected_service.dart';
 import 'package:doctor_mfc_admin/services/database.dart';
 
 import 'package:doctor_mfc_admin/services/global_values.dart';
@@ -12,6 +13,7 @@ import 'package:doctor_mfc_admin/widgets/custom_card.dart';
 import 'package:doctor_mfc_admin/widgets/custom_loading_indicator.dart';
 import 'package:doctor_mfc_admin/widgets/green_elevated_button.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 class ManageSystemsPage extends StatefulWidget {
   ManageSystemsPage({Key? key}) : super(key: key);
@@ -27,39 +29,38 @@ class _ManageSystemsPageState extends State<ManageSystemsPage> {
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<Map<String, dynamic>>(
-        future: GlobalValues().getGlobalValues(),
-        builder: (context, snapshot) {
-          if (snapshot.hasData) {
-            // Set global values.
-            brands = List.from(snapshot.data!['brands'] ?? []);
-            systemTypes = List.from(snapshot.data!['systemTypes'] ?? []);
-
-            return BodyTemplate(
-              title: 'Manage systems',
-              body: [
-                Row(
-                  children: [
-                    Container(
-                      width: MediaQuery.of(context).size.width * 0.3,
-                      child: TextField(
-                        decoration: InputDecoration(
-                          hintText: 'Search for a system',
-                        ),
-                      ),
-                    ),
-                    SizedBox(width: kDefaultPadding / 2),
-                    addSystemButton(),
-                  ],
+    return BodyTemplate(
+      title: 'Manage systems',
+      body: [
+        Row(
+          children: [
+            Container(
+              width: MediaQuery.of(context).size.width * 0.3,
+              child: TextField(
+                decoration: InputDecoration(
+                  hintText: 'Search for a system',
                 ),
-                SizedBox(height: kDefaultPadding * 2),
-                content(),
-              ],
-            );
-          } else {
-            return CustomLoadingIndicator();
-          }
-        });
+              ),
+            ),
+            SizedBox(width: kDefaultPadding / 2),
+            addSystemButton(),
+          ],
+        ),
+        SizedBox(height: kDefaultPadding * 2),
+        FutureBuilder<Map<String, dynamic>>(
+            future: GlobalValues().getGlobalValues(),
+            builder: (context, snapshot) {
+              if (snapshot.hasData) {
+                // Set global values.
+                brands = List.from(snapshot.data!['brands'] ?? []);
+                systemTypes = List.from(snapshot.data!['systemTypes'] ?? []);
+
+                return content();
+              } else
+                return CustomLoadingIndicator();
+            }),
+      ],
+    );
   }
 
   GreenElevatedButton addSystemButton() {
@@ -105,22 +106,17 @@ class _ManageSystemsPageState extends State<ManageSystemsPage> {
                       itemCount: systems.length,
                       itemBuilder: (context, j) {
                         System system = systems[j];
+
                         return Align(
                           alignment: Alignment.centerLeft,
                           child: CustomCard(
                             title: '${system.brand} ${system.description}',
                             body: [
-                              Text('${system.components.length} components'),
-                              SizedBox(height: kDefaultPadding / 4),
-                              Text(
-                                  '${system.knownProblems.length} known problems'),
+                              Text('${system.problems.length} known problems'),
                               SizedBox(height: kDefaultPadding / 4),
                               Text('${system.solutions.length} solutions'),
                             ],
-                            onPressed: () => Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (_) => SystemDetailsPage(system))),
+                            onPressed: () => onSystemPressed(system),
                           ),
                         );
                       },
@@ -136,5 +132,13 @@ class _ManageSystemsPageState extends State<ManageSystemsPage> {
       separatorBuilder: (BuildContext context, int index) =>
           SizedBox(height: kDefaultPadding * 1.5),
     );
+  }
+
+  Future<dynamic> onSystemPressed(System system) {
+    Provider.of<CurrentSystemSelectedService>(context, listen: false)
+        .selectSystem(system);
+
+    return Navigator.push(
+        context, MaterialPageRoute(builder: (_) => SystemDetailsPage(system)));
   }
 }

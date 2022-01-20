@@ -1,4 +1,5 @@
 import 'package:doctor_mfc_admin/constants.dart';
+import 'package:doctor_mfc_admin/services/current_system_selected_service.dart';
 import 'package:doctor_mfc_admin/services/page_change_service.dart';
 
 import 'package:doctor_mfc_admin/src/index_page.dart';
@@ -24,6 +25,8 @@ class MyApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         Provider<PageChangeService>(create: (_) => PageChangeService()),
+        Provider<CurrentSystemSelectedService>(
+            create: (_) => CurrentSystemSelectedService()),
       ],
       child: MaterialApp(
         title: 'Doctor MFC - ADMIN',

@@ -1,12 +1,18 @@
+import 'dart:typed_data';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:doctor_mfc_admin/models/component.dart';
+import 'package:doctor_mfc_admin/models/attachment.dart';
+import 'package:doctor_mfc_admin/models/enums/attachment_type.dart';
 import 'package:doctor_mfc_admin/models/problem.dart';
 import 'package:doctor_mfc_admin/models/solution.dart';
 import 'package:doctor_mfc_admin/models/system.dart';
-import 'package:doctor_mfc_admin/models/user_response.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 
 class Database {
   final firestore = FirebaseFirestore.instance;
+
+/* --------------------------- Document references -------------------------- */
 
   final systemsRef =
       FirebaseFirestore.instance.collection('systems').withConverter<System>(
@@ -17,7 +23,19 @@ class Database {
             toFirestore: (system, _) => system.toMap(),
           );
 
+  final fileRef = FirebaseFirestore.instance
+      .collection('documents')
+      .withConverter<FileAttachment>(
+        fromFirestore: (snapshot, _) => FileAttachment.fromMap(
+          snapshot.id,
+          snapshot.data()!,
+        ),
+        toFirestore: (fileAttachment, _) => fileAttachment.toMap(),
+      );
+
 /* ----------------------------- System queries ----------------------------- */
+
+  Future<QuerySnapshot<System>> getAllSystems() => systemsRef.get();
 
   Stream<QuerySnapshot<System>> getSystemsSnapshots() => systemsRef.snapshots();
 
@@ -62,13 +80,8 @@ class Database {
             .collection('systems')
             .doc(system.id)
             .set(system.toMap(), SetOptions(merge: true)),
-        // Update search results (system)
-        firestore.collection('searchResults').doc(system.id).set(
-              system.searchResultToMap(),
-              SetOptions(merge: true),
-            ),
         // Update problems docs
-        updateProblems(problems: system.knownProblems, system: system)
+        updateProblems(problems: system.problems, system: system)
       ]);
     } catch (e) {
       print(e);
@@ -125,24 +138,15 @@ class Database {
   }
 
   Future updateSolution({
-    required UserResponse response,
+    required Solution solution,
     required Problem problem,
     required System system,
   }) async {
     try {
-      return await Future.wait(
-        [
-          // Update solution doc
-          firestore.collection('solutions').doc(response.id).set(
-                response.toMap(),
-                SetOptions(merge: true),
-              ),
-          firestore.collection('searchResults').doc(response.id).set(
-                response.searchResultToMap(problem: problem, system: system),
-                SetOptions(merge: true),
-              ),
-        ],
-      );
+      return await firestore
+          .collection('solutions')
+          .doc(solution.id)
+          .set(solution.toMap(), SetOptions(merge: true));
     } on Exception catch (e) {
       print(e);
     }
@@ -153,11 +157,13 @@ class Database {
     required System system,
   }) async {
     try {
-      return await Future.forEach(problem.userResponses,
-          (UserResponse response) {
-        if (response.isOkResponse == false)
-          updateSolution(response: response, problem: problem, system: system);
-      });
+      return await Future.forEach(
+          problem.solutions,
+          (Solution solution) => updateSolution(
+                solution: solution,
+                problem: problem,
+                system: system,
+              ));
     } on Exception catch (e) {
       print(e);
     }
@@ -168,5 +174,94 @@ class Database {
   /// Deletes the system of `id` and returns the Future of this action.
   Future deleteSystem(String id) {
     return firestore.collection('systems').doc(id).delete();
+  }
+
+  /* ------------------------------ File queries ------------------------------ */
+
+  Stream<QuerySnapshot<FileAttachment>> getAllDocumentation() => fileRef
+      .where('type', isEqualTo: typeToCodeMap[AttachmentType.DOCUMENTATION])
+      .snapshots();
+
+  Stream<QuerySnapshot<FileAttachment>> getAllGuides() => fileRef
+      .where('type', isEqualTo: typeToCodeMap[AttachmentType.GUIDE])
+      .snapshots();
+
+  /// Uploads file to Firebase Storage, sets file data to FileAttachment object
+  /// and returns true if the future completes successfully.
+  Future<bool?> addAttachment(
+    FileAttachment attachment,
+    PlatformFile file,
+  ) async {
+    String? fileUrl;
+
+    fileUrl = await _uploadFile(file);
+
+    attachment.fileUrl = fileUrl;
+    attachment.setFileData(file, fileUrl);
+
+    try {
+      await firestore
+          .collection('documents')
+          .doc(attachment.id)
+          .set(attachment.toMap(), SetOptions(merge: true));
+      await firestore
+          .collection('searchResults')
+          .doc(attachment.id)
+          .set(attachment.toMap(), SetOptions(merge: true));
+
+      return true;
+    } on Exception catch (e) {
+      print(e);
+      return false;
+    }
+  }
+
+  Future<bool?> updateAttachment(
+    FileAttachment attachment,
+    PlatformFile? file,
+  ) async {
+    if (file != null)
+      return addAttachment(attachment, file);
+    else {
+      try {
+        await firestore
+            .collection('documents')
+            .doc(attachment.id)
+            .set(attachment.toMap(), SetOptions(merge: true));
+        await firestore
+            .collection('searchResults')
+            .doc(attachment.id)
+            .set(attachment.toMap(), SetOptions(merge: true));
+
+        return true;
+      } on Exception catch (e) {
+        print(e);
+        return false;
+      }
+    }
+  }
+
+  Future<FileAttachment?> getFileAttachment(String id) async {
+    return await firestore
+        .collection('documents')
+        .doc(id)
+        .get()
+        .then((snapshot) {
+      if (snapshot.exists)
+        return FileAttachment.fromMap(snapshot.id, snapshot.data()!);
+    });
+  }
+
+  /* -------------------------------------------------------------------------- */
+
+  Future<String> _uploadFile(PlatformFile file) async {
+    assert(file.bytes != null);
+    Uint8List fileBytes = file.bytes!;
+
+    Reference fileRef = FirebaseStorage.instance.ref('uploads/${file.name}');
+
+    await fileRef.putData(fileBytes);
+
+    return fileRef.getDownloadURL();
   }
 }

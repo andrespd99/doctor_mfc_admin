@@ -1,19 +1,27 @@
 import 'package:doctor_mfc_admin/constants.dart';
+import 'package:doctor_mfc_admin/models/attachment.dart';
+import 'package:doctor_mfc_admin/models/enums/attachment_type.dart';
 import 'package:doctor_mfc_admin/models/solution.dart';
 import 'package:doctor_mfc_admin/models/step.dart' as my;
+import 'package:doctor_mfc_admin/services/current_system_selected_service.dart';
+import 'package:doctor_mfc_admin/src/file_attatchment_edit_dialog.dart';
 import 'package:doctor_mfc_admin/widgets/base_input.dart';
-import 'package:doctor_mfc_admin/widgets/custom_alert_dialog.dart';
+import 'package:doctor_mfc_admin/widgets/body_template.dart';
+
 import 'package:doctor_mfc_admin/widgets/section_subheader.dart';
+import 'package:doctor_mfc_admin/widgets/section_subheader_with_add_button.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/painting.dart';
 import 'package:flutter/widgets.dart';
+import 'package:provider/provider.dart';
 import 'package:uuid/uuid.dart';
 
-class SolutionDialog extends StatefulWidget {
+class SolutionPage extends StatefulWidget {
   final Function(Solution) callback;
   final Solution? solution;
   final String subtitle;
 
-  SolutionDialog({
+  SolutionPage({
     required this.callback,
     required this.subtitle,
     this.solution,
@@ -21,10 +29,10 @@ class SolutionDialog extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  _SolutionDialogState createState() => _SolutionDialogState();
+  _SolutionPageState createState() => _SolutionPageState();
 }
 
-class _SolutionDialogState extends State<SolutionDialog> {
+class _SolutionPageState extends State<SolutionPage> {
   final descriptionController = TextEditingController();
   final instructionsController = TextEditingController();
   final videoLinkController = TextEditingController();
@@ -35,15 +43,20 @@ class _SolutionDialogState extends State<SolutionDialog> {
   bool get fieldsAreNotEmpty => descriptionController.text.isNotEmpty;
 
   bool? isStepBased;
-  bool manageModeEnabled = false;
+
+  bool stepManageModeEnabled = false;
 
   late List<my.Step> steps = [];
+
+  List<Attachment> attachments = [];
+  bool attachmentsManageModeEnabled = false;
 
   @override
   void initState() {
     if (widget.solution != null) {
       Solution solution = widget.solution!;
       descriptionController.text = solution.description;
+      attachments = solution.attachments ?? [];
       // Check whether the solution is step-based or not.
       if (solution.steps != null && solution.steps!.isNotEmpty) {
         isStepBased = true;
@@ -54,7 +67,6 @@ class _SolutionDialogState extends State<SolutionDialog> {
         isStepBased = false;
         instructionsController.text = solution.instructions!;
       }
-
       // videoLinkController.text =
       //     (solution.links != null) ? solution.links! : '';
     }
@@ -66,7 +78,7 @@ class _SolutionDialogState extends State<SolutionDialog> {
   Widget build(BuildContext context) {
     addListenersTo([videoLinkController, descriptionController]);
 
-    return CustomAlertDialog(
+    return BodyTemplate(
       title: 'Add solution',
       subtitle: widget.subtitle,
       body: [
@@ -74,18 +86,159 @@ class _SolutionDialogState extends State<SolutionDialog> {
             title: 'Solution description', controller: descriptionController),
         SizedBox(height: kDefaultPadding),
         (isStepBased == null) ? askSolutionTypeSection() : solutionGuideInput(),
+        // SizedBox(height: kDefaultPadding),
+        // videoLinkInput(),
         SizedBox(height: kDefaultPadding),
-        BaseInput(
-          title: 'Video link',
-          subtitle: '(optional)',
-          controller: videoLinkController,
-          hintText: 'https://www.youtube.com/some_video',
-          errorText: errorText(),
+        attatchmentsList(),
+        SizedBox(height: kDefaultPadding * 3),
+        finishButton(),
+      ],
+    );
+  }
+
+  BaseInput videoLinkInput() {
+    return BaseInput(
+      title: 'Video link',
+      subtitle: '(optional)',
+      controller: videoLinkController,
+      hintText: 'https://www.youtube.com/some_video',
+      errorText: errorText(),
+    );
+  }
+
+  Column attatchmentsList() {
+    final dropdownItems = [
+      DropdownMenuItem(
+        child: Text('Link'),
+        value: AttachmentType.LINK,
+      ),
+      DropdownMenuItem(
+        child: Text('Documentation'),
+        value: AttachmentType.DOCUMENTATION,
+      ),
+      DropdownMenuItem(
+        child: Text('Guide'),
+        value: AttachmentType.GUIDE,
+      ),
+    ];
+
+    return Column(
+      children: [
+        SectionSubheaderWithButton(
+          title: 'Links, docs and guides',
+          buttonText: 'Add',
+          onPressed: () => addNewAttatchment(),
+          enableManageButton: true,
+          onManageButtonPressed: () => toggleAttachmentsManageMode(),
+          manageModeEnabled: attachmentsManageModeEnabled,
+        ),
+        SizedBox(height: kDefaultPadding / 2),
+        ListView.separated(
+          shrinkWrap: true,
+          itemCount: attachments.length,
+          separatorBuilder: (context, index) =>
+              SizedBox(height: kDefaultPadding / 3),
+          itemBuilder: (context, i) {
+            return Row(
+              children: [
+                DropdownButton<AttachmentType>(
+                  items: dropdownItems,
+                  onChanged: (selectedType) =>
+                      changeAttachmentType(i, selectedType),
+                  value: attachments[i].type,
+                ),
+                SizedBox(width: kDefaultPadding / 2),
+                ...attachmentTileWidgets(attachments[i]),
+                attachmentsManageModeEnabled
+                    ? TextButton(
+                        child: Text('Delete'),
+                        style: TextButton.styleFrom(primary: Colors.red),
+                        onPressed: () => removeAttachment(i),
+                      )
+                    : Container(),
+              ],
+            );
+          },
         ),
       ],
-      finishButtonTitle: (widget.solution == null) ? 'Save' : 'Update solution',
-      onFinish: () => onFinish(),
-      isButtonEnabled: canFinish(),
+    );
+  }
+
+  List<Widget> attachmentTileWidgets(Attachment attachment) {
+    if (attachment is LinkAttachment) {
+      // Attachment is a link.
+      return [
+        Expanded(
+          child: TextField(
+            controller: attachment.controller.url,
+            decoration: InputDecoration(
+              labelText: 'Url',
+              border: OutlineInputBorder(),
+            ),
+          ),
+        ),
+        SizedBox(width: kDefaultPadding / 2),
+        Expanded(
+          child: TextField(
+            controller: attachment.controller.title,
+            decoration: InputDecoration(
+              labelText: 'Title',
+              border: OutlineInputBorder(),
+            ),
+          ),
+        ),
+      ];
+    } else if (attachment is FileAttachment) {
+      if (!attachment.isFileAttached) {
+        // No attachment selected.
+        return [
+          ElevatedButton(
+            child: Text('Attach'),
+            onPressed: () => openAttachmentEditDialog(attachment),
+          ),
+        ];
+      } else {
+        // Attachment selected.
+        return [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'File attached',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                SizedBox(height: kDefaultPadding / 4),
+                Text('${attachment.fileName!}'),
+              ],
+            ),
+          ),
+          SizedBox(width: kDefaultPadding / 3),
+          // Hide 'Change' button when manage mode is enabled.
+          Align(
+            alignment: Alignment.centerRight,
+            child: attachmentsManageModeEnabled
+                ? Container()
+                : ElevatedButton(
+                    child: Text('Change'),
+                    onPressed: () => openAttachmentEditDialog(attachment),
+                  ),
+          ),
+        ];
+      }
+    } else {
+      return [];
+    }
+  }
+
+  Center finishButton() {
+    return Center(
+      child: ElevatedButton(
+        child: Text(
+            (widget.solution == null) ? 'Create solution' : 'Update solution'),
+        onPressed: canFinish ? () => onFinish() : null,
+      ),
     );
   }
 
@@ -210,22 +363,17 @@ class _SolutionDialogState extends State<SolutionDialog> {
 
   Widget stepsInput() {
     return Container(
-      width: 100.00,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
-          Row(
-            children: [
-              SectionSubheader('Steps'),
-              TextButton(
-                onPressed: () => toggleManageMode(),
-                child: Text((!manageModeEnabled) ? 'Manage' : 'Finish'),
-                style: TextButton.styleFrom(
-                  primary: kFontBlack.withOpacity(0.5),
-                ),
-              ),
-            ],
+          SectionSubheaderWithButton(
+            title: 'Steps',
+            buttonText: 'Add step',
+            onPressed: () => addStep(),
+            enableManageButton: true,
+            onManageButtonPressed: () => toggleStepManageMode(),
+            manageModeEnabled: stepManageModeEnabled,
           ),
           SizedBox(height: kDefaultPadding / 2),
           ListView.separated(
@@ -246,8 +394,7 @@ class _SolutionDialogState extends State<SolutionDialog> {
                       ),
                     ),
                     SizedBox(width: kDefaultPadding / 2),
-                    SizedBox(
-                      width: 400,
+                    Expanded(
                       child: TextField(
                         focusNode: stepsControllers[i].focusNode,
                         controller: stepsControllers[i].descriptionController,
@@ -266,7 +413,7 @@ class _SolutionDialogState extends State<SolutionDialog> {
                       ),
                     ),
                     SizedBox(width: kDefaultPadding / 3),
-                    (manageModeEnabled && i != 0)
+                    (stepManageModeEnabled && i != 0)
                         ? IconButton(
                             icon: Icon(Icons.delete, color: Colors.black38),
                             onPressed: () => removeStep(i))
@@ -289,8 +436,7 @@ class _SolutionDialogState extends State<SolutionDialog> {
                                 children: [
                                   stepText('${i + 1}.${j + 1}. '),
                                   SizedBox(width: kDefaultPadding / 2),
-                                  SizedBox(
-                                    width: 400,
+                                  Expanded(
                                     child: TextField(
                                       focusNode: stepsControllers[i]
                                           .substepFocusNodes[j],
@@ -309,7 +455,7 @@ class _SolutionDialogState extends State<SolutionDialog> {
                                     ),
                                   ),
                                   SizedBox(width: kDefaultPadding / 3),
-                                  (manageModeEnabled)
+                                  (stepManageModeEnabled)
                                       ? IconButton(
                                           icon: Icon(Icons.delete,
                                               color: Colors.black38),
@@ -479,7 +625,7 @@ class _SolutionDialogState extends State<SolutionDialog> {
         .forEach((controller) => controller.addListener(() => setState(() {})));
   }
 
-  bool canFinish() {
+  bool get canFinish {
     if (descriptionController.text.isNotEmpty && isValidLink()) {
       if (isStepBased != null) {
         if (isStepBased!) {
@@ -496,48 +642,93 @@ class _SolutionDialogState extends State<SolutionDialog> {
 
   /// When on finish, returns a Solution object and goes back to last page.
   void onFinish() {
-    if (steps.last.description.isEmpty) steps.removeLast();
+    if (isStepBased! && steps.last.description.isEmpty) steps.removeLast();
 
-    widget.callback(new Solution(
-        id: Uuid().v4(),
+    widget.callback(
+      new Solution(
+        id: (widget.solution != null) ? widget.solution!.id : Uuid().v4(),
         description: descriptionController.text,
         instructions: instructionsController.text,
         steps: (isStepBased!) ? steps : null,
-        links: [] // TODO: Add links.
-        ));
+        attachments: attachments,
+      ),
+    );
 
     Navigator.pop(context);
   }
 
-  // bool areStepsValid() {
-  //   if (steps.length == 0 || anyInvalidSteps())
-  //     return false;
-  //   else
-  //     return true;
-  // }
+  bool isLastStep(my.Step step) => steps.last == step;
 
-  // bool isLastStep(my.Step step) => steps.last == step;
+  bool stepHasEmptySubsteps(my.Step step) =>
+      step.substeps.any((substep) => substep.isEmpty);
 
-  // bool stepHasEmptySubsteps(my.Step step) =>
-  //     step.substeps.any((substep) => substep.isEmpty);
+  void toggleStepManageMode() =>
+      setState(() => stepManageModeEnabled = !stepManageModeEnabled);
 
-  // bool anyInvalidSteps() {
-  //   for (my.Step step in steps) {
-  //     if (steps.length > 1 && isLastStep(step) && step.substeps.isEmpty) {
-  //       // If its not the only step, is the last step, it has no substeps and is empty,
-  //       // do nothing, it doesn't matter.
-  //     } else if (isLastStep(step) && step.substeps.isNotEmpty) {
-  //       // Last step description is empty but has substeps. Not valid.
-  //       return true;
-  //     } else if (step.description.isEmpty)
-  //       return true;
-  //     else if (stepHasEmptySubsteps(step)) return true;
-  //   }
-  //   return false;
-  // }
+  void onAttachmentCallback(FileAttachment attachment, int index) {
+    attachments[index] = attachment;
 
-  void toggleManageMode() =>
-      setState(() => manageModeEnabled = !manageModeEnabled);
+    setState(() {});
+  }
+
+  void openAttachmentEditDialog(FileAttachment attachment) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return FileAttachmentEditDialog(
+          attachment: attachment,
+          onAttachmentCallback: (attachment) {
+            setState(() {});
+          },
+        );
+      },
+    );
+  }
+
+/* ---------------------------- CRUD ATTACHMENTS ---------------------------- */
+  void addNewAttatchment() {
+    // Adds new attatchment to list.
+    attachments.add(LinkAttachment());
+
+    setState(() {});
+  }
+
+  void changeAttachmentType(int i, AttachmentType? selectedType) {
+    String? systemId =
+        Provider.of<CurrentSystemSelectedService>(context, listen: false)
+            .currentSelectedSystem
+            ?.id;
+
+    assert(selectedType != null);
+    assert(systemId != null);
+
+    if (selectedType == AttachmentType.DOCUMENTATION ||
+        selectedType == AttachmentType.GUIDE) {
+      attachments[i] = FileAttachment(
+        type: selectedType!,
+        systemId: systemId!,
+      );
+    } else if (selectedType == AttachmentType.LINK) {
+      attachments[i] = LinkAttachment();
+    } else {
+      throw Exception("Invalid attachment type.");
+    }
+    setState(() {});
+  }
+
+  void deleteAttachment(int i) {
+    setState(() => attachments.removeAt(i));
+  }
+
+  void toggleAttachmentsManageMode() {
+    attachmentsManageModeEnabled = !attachmentsManageModeEnabled;
+    setState(() {});
+  }
+
+  void removeAttachment(int i) {
+    attachments.removeAt(i);
+    setState(() {});
+  }
 }
 
 class StepController {

@@ -1,24 +1,33 @@
 import 'package:doctor_mfc_admin/constants.dart';
+import 'package:doctor_mfc_admin/widgets/loading_indicator_container.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 /// Builds a Loading Indicator Alert Dialog that stays until the future has completed.
-Future futureLoadingIndicator(BuildContext context, Future future) {
+Future<T?> futureLoadingIndicator<T>(BuildContext context, Future<T> future) {
   return showDialog(
     context: context,
+    barrierDismissible: false,
     builder: (context) {
-      future
-          .then(
-        (_) => Navigator.pop(context),
-        onError: (error, stackTrace) => onErrorDialog(
+      // future.then<T?>((result) {
+      future.then<T?>((result) {
+        // If the future completes successfully, dismiss the dialog.
+        Navigator.pop(context, result);
+      }, onError: (error, stackTrace) {
+        // If the future completes with an error, dismiss the loading dialog
+        // and show the error dialog.
+        Navigator.pop(context);
+
+        onErrorDialog(
           context: context,
           errorMessage: 'An unexpected error has ocurred: $error',
           onTryAgainFuture: future,
           error: error,
           stackTrace: stackTrace,
-        ),
-      )
-          .timeout(Duration(seconds: 3), onTimeout: () {
+        );
+      }).timeout(Duration(seconds: 15), onTimeout: () {
+        // If the future times out, dismiss the loading dialog
+        // and show the error dialog with a Request Timeout message.
         Navigator.pop(context);
         onErrorDialog(
           context: context,
@@ -26,38 +35,12 @@ Future futureLoadingIndicator(BuildContext context, Future future) {
           onTryAgainFuture: future,
         );
       });
-
-      return Center(
-        child: Container(
-          width: 130,
-          height: 130,
-          decoration: BoxDecoration(
-            color: Colors.black26,
-            borderRadius: BorderRadius.circular(kDefaultBorderRadius),
-          ),
-          child: Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                CircularProgressIndicator(color: kSecondaryLightColor),
-                SizedBox(height: kDefaultPadding / 2),
-                Text(
-                  'Loading',
-                  style: Theme.of(context)
-                      .textTheme
-                      .caption
-                      ?.apply(color: kSecondaryLightColor),
-                )
-              ],
-            ),
-          ),
-        ),
-      );
+      return LoadingIndicatorContainer();
     },
   );
 }
 
-void onErrorDialog({
+Future onErrorDialog({
   required BuildContext context,
   String? errorMessage,
   Future? onTryAgainFuture,
@@ -66,8 +49,7 @@ void onErrorDialog({
 }) {
   print(error);
   print(stackTrace);
-
-  showDialog(
+  return showDialog(
     context: context,
     builder: (context) {
       return AlertDialog(

@@ -21,10 +21,8 @@ class BodyTemplate extends StatefulWidget {
 class _BodyTemplateState extends State<BodyTemplate> {
   @override
   Widget build(BuildContext context) {
-    return Container(
-      color: kBackgroundColor,
-      height: MediaQuery.of(context).size.height,
-      child: SingleChildScrollView(
+    return Scaffold(
+      body: SingleChildScrollView(
         child: Center(
           child: Container(
             constraints: BoxConstraints(
@@ -44,9 +42,11 @@ class _BodyTemplateState extends State<BodyTemplate> {
                   children: [
                     (Navigator.canPop(context)) ? goBackButton() : Container(),
                     SizedBox(width: kDefaultPadding / 3),
-                    SectionHeader(
-                      title: '${widget.title}',
-                      subtitle: widget.subtitle,
+                    Expanded(
+                      child: SectionHeader(
+                        title: '${widget.title}',
+                        subtitle: widget.subtitle,
+                      ),
                     ),
                   ],
                 ),

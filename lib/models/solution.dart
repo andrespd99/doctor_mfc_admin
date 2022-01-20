@@ -1,14 +1,12 @@
-import 'package:doctor_mfc_admin/models/guide_link.dart';
-import 'package:doctor_mfc_admin/models/problem.dart';
+import 'package:doctor_mfc_admin/models/attachment.dart';
 import 'package:doctor_mfc_admin/models/step.dart';
-import 'package:doctor_mfc_admin/models/system.dart';
 
 class Solution {
   final String id;
   final String description;
   final String? instructions;
-  final String? imageUrl;
-  final List<GuideLink>? links;
+  // final String? imageUrl;
+  final List<Attachment>? attachments;
 
   List<Step>? steps;
 
@@ -17,8 +15,8 @@ class Solution {
     required this.description,
     this.instructions,
     this.steps,
-    this.imageUrl,
-    this.links,
+    this.attachments,
+    // this.imageUrl,
   });
 
   factory Solution.fromMap(Map<String, dynamic> data) {
@@ -26,9 +24,9 @@ class Solution {
       id: data['id'],
       description: data['description'],
       instructions: data['instructions'],
-      imageUrl: data['imageUrl'],
-      links: _getLinksFromMap(List.from(data['links'] ?? [])),
       steps: _getStepsFromMap(List.from(data['steps'] ?? [])),
+      attachments: _getAttachmentsFromMap(List.from(data['attachments'] ?? [])),
+      // imageUrl: data['imageUrl'],
     );
   }
 
@@ -38,34 +36,41 @@ class Solution {
     return {
       'id': id,
       'description': description,
-      'instructions': instructions,
-      'imageUrl': imageUrl,
-      'links': links?.map((link) => link.toMap()).toList(),
-      'steps': steps?.map((step) => step.toMap()).toList(),
+      if (instructions != null && instructions!.isNotEmpty)
+        'instructions': instructions,
+      if (steps != null && steps!.isNotEmpty)
+        'steps': steps!.map((step) => step.toMap()).toList(),
+      if (attachments != null && attachments!.isNotEmpty)
+        'attachments': attachments!.map((attachment) {
+          if (attachment is FileAttachment) {
+            return attachment.toMap();
+          } else if (attachment is LinkAttachment) {
+            return attachment.toMap();
+          }
+        }).toList(),
+      // 'imageUrl': imageUrl,
     };
   }
 
   /// Returns a List of [Step] from a json map.
-  static List<Step> _getStepsFromMap(List<Map<String, dynamic>>? data) {
-    if (data != null)
+  static List<Step>? _getStepsFromMap(List<Map<String, dynamic>>? data) {
+    if (data != null || data!.length != 0)
       return data.map((stepsData) => Step.fromMap(stepsData)).toList();
-    else
-      return [];
   }
 
-  /// Returns a List of [GuideLink] from a json map.
-  static List<GuideLink> _getLinksFromMap(List<Map<String, dynamic>>? data) {
-    if (data != null)
-      return data.map((linkData) => GuideLink.fromMap(linkData)).toList();
-    else
-      return [];
-  }
-
-  addStep(Step step) {
+  void addStep(Step step) {
     if (steps != null) {
       steps!.add(step);
     } else {
       steps = [step];
     }
+  }
+
+  static List<Attachment>? _getAttachmentsFromMap(
+      List<Map<String, dynamic>> attachments) {
+    if (attachments.isNotEmpty)
+      return attachments
+          .map((attachmentMap) => Attachment.fromMap(attachmentMap))
+          .toList();
   }
 }
