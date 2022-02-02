@@ -3,12 +3,15 @@ import 'package:doctor_mfc_admin/models/attachment.dart';
 import 'package:doctor_mfc_admin/models/enums/attachment_type.dart';
 import 'package:doctor_mfc_admin/services/database.dart';
 import 'package:doctor_mfc_admin/services/file_picker_service.dart';
+import 'package:doctor_mfc_admin/services/search_engine.dart';
 import 'package:doctor_mfc_admin/widgets/future_loading_indicator.dart';
 import 'package:doctor_mfc_admin/widgets/section_header.dart';
 import 'package:doctor_mfc_admin/widgets/section_subheader.dart';
 import 'package:doctor_mfc_admin/widgets/section_subheader_with_add_button.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
+import 'package:flutter_typeahead/flutter_typeahead.dart';
 
 class FileAttachmentEditDialog extends StatefulWidget {
   final FileAttachment attachment;
@@ -30,8 +33,9 @@ class _FileAttachmentEditDialogState extends State<FileAttachmentEditDialog> {
 
   bool get attachmentIsEmpty => attachment.isFileAttached;
 
-  // File attributes
+  /// File selected from device.
   PlatformFile? file;
+
   String? fileName;
   int? fileSize;
 
@@ -64,113 +68,152 @@ class _FileAttachmentEditDialogState extends State<FileAttachmentEditDialog> {
     } else {
       isUpdating = false;
     }
+
+    addListeners();
     super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
-    addListeners();
+    return Scaffold(
+      body: Center(
+        child: Container(
+          padding: EdgeInsets.all(kDefaultPadding * 3),
+          constraints: BoxConstraints(
+            maxWidth: 800,
+            maxHeight: 600,
+          ),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(10),
+            color: Colors.white,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SectionHeader(title: '$dialogTitle'),
+              SizedBox(height: kDefaultPadding),
+              TypeAheadField(
+                suggestionsCallback: (query) async {
+                  final result =
+                      await SearchEngine().searchFile(query, attachment.type);
 
-    return Center(
-      child: Container(
-        padding: EdgeInsets.all(kDefaultPadding * 3),
-        constraints: BoxConstraints(
-          maxWidth: 800,
-          maxHeight: 600,
-        ),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(10),
-          color: Colors.white,
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            SectionHeader(title: '$dialogTitle'),
-            SizedBox(height: kDefaultPadding),
-            TextField(
-              decoration: InputDecoration(
-                hintText: 'Search existing $attachmentTypeToStr',
-              ),
-            ),
-            SizedBox(height: kDefaultPadding * 3),
-            SectionSubheader('Title for $attachmentTypeToStr'),
-            SizedBox(height: kDefaultPadding / 3),
-            TextField(
-              controller: attachment.controller.title,
-              decoration: InputDecoration(
-                hintText: 'Title',
-              ),
-            ),
-            SizedBox(height: kDefaultPadding),
-            // If file is attached, show header with dettach button.
-            isFileAttached
-                ? SectionSubheaderWithButton(
-                    title: 'PDF file',
-                    buttonText: 'Dettach file',
-                    onPressed: () => dettachFile(),
-                    buttonColor: kAccentColor,
-                  )
-                : SectionSubheader('PDF file'),
-            SizedBox(height: kDefaultPadding / 3),
-            isFileAttached
-                ? Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Expanded(
-                        child: Text(
-                          '${fileName!}',
-                          maxLines: 2,
-                        ),
+                  return result;
+                },
+                itemBuilder: (context, FileAttachment suggestion) {
+                  return ListTile(
+                    title: Text(
+                      suggestion.title,
+                      style: TextStyle(
+                        color: kPrimaryColor,
+                        fontWeight: FontWeight.bold,
                       ),
-                      SizedBox(width: kDefaultPadding / 3),
-                      Text(
-                        '(${fileSize! / 1000} Kbs)',
-                        style: Theme.of(context).textTheme.caption,
-                      ),
-                    ],
-                  )
-                : Row(
-                    children: [
-                      // ! Uncomment if URL is gonna be used.
-                      // Expanded(
-                      //   child: TextField(
-                      //     controller: attachment.controller.url,
-                      //     decoration: InputDecoration(
-                      //       hintText: 'URL',
-                      //     ),
-                      //   ),
-                      // ),
-                      // SizedBox(width: kDefaultPadding / 2),
-                      // Text('or'),
-                      // SizedBox(width: kDefaultPadding / 3),
-                      TextButton(
-                        child: Text('Attach file'),
-                        onPressed: () async => attachFile(),
-                        style: TextButton.styleFrom(primary: Colors.grey),
-                      ),
-                    ],
-                  ),
-            Spacer(),
-            Align(
-              alignment: Alignment.bottomRight,
-              child: ButtonBar(
-                children: [
-                  TextButton(
-                    child: Text('Cancel'),
-                    onPressed: () => Navigator.pop(context),
-                    style: TextButton.styleFrom(
-                      primary: Colors.grey,
                     ),
+                  );
+                },
+                // hideOnLoading: true,
+                loadingBuilder: (context) => ListTile(
+                  title: Text(
+                    'Searching...',
+                    style: TextStyle(fontWeight: FontWeight.w300),
                   ),
-                  SizedBox(width: kDefaultPadding / 2),
-                  ElevatedButton(
-                    child: Text(isUpdating ? 'Update' : 'Create'),
-                    onPressed: canFinish ? () => onFinish() : null,
-                  ),
-                ],
+                ),
+                onSuggestionSelected: (FileAttachment selectedAttachment) {
+                  setState(() {
+                    attachment = selectedAttachment;
+                    isFileAttached = true;
+                    fileName = attachment.fileName;
+                    fileSize = attachment.fileSize;
+                  });
+                  setState(() {});
+                },
+                noItemsFoundBuilder: (context) =>
+                    ListTile(title: Text('No results found')),
               ),
-            ),
-          ],
+              // TextField(
+              //   decoration: InputDecoration(
+              //     hintText: 'Search existing $attachmentTypeToStr',
+              //   ),
+              // ),
+              SizedBox(height: kDefaultPadding * 3),
+              SectionSubheader('Title for $attachmentTypeToStr'),
+              SizedBox(height: kDefaultPadding / 3),
+              TextField(
+                controller: attachment.controller.title,
+                decoration: InputDecoration(
+                  hintText: 'Title',
+                ),
+              ),
+              SizedBox(height: kDefaultPadding),
+              // If file is attached, show header with dettach button.
+              isFileAttached
+                  ? SectionSubheaderWithButton(
+                      title: 'PDF file',
+                      buttonText: 'Dettach file',
+                      onPressed: () => dettachFile(),
+                      buttonColor: kAccentColor,
+                    )
+                  : SectionSubheader('PDF file'),
+              SizedBox(height: kDefaultPadding / 3),
+              isFileAttached
+                  ? Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Expanded(
+                          child: Text(
+                            '${fileName!}',
+                            maxLines: 2,
+                          ),
+                        ),
+                        SizedBox(width: kDefaultPadding / 3),
+                        Text(
+                          '(${fileSize! / 1000} Kbs)',
+                          style: Theme.of(context).textTheme.caption,
+                        ),
+                      ],
+                    )
+                  : Row(
+                      children: [
+                        // ! Uncomment if URL is gonna be used.
+                        // Expanded(
+                        //   child: TextField(
+                        //     controller: attachment.controller.url,
+                        //     decoration: InputDecoration(
+                        //       hintText: 'URL',
+                        //     ),
+                        //   ),
+                        // ),
+                        // SizedBox(width: kDefaultPadding / 2),
+                        // Text('or'),
+                        // SizedBox(width: kDefaultPadding / 3),
+                        TextButton(
+                          child: Text('Attach file'),
+                          onPressed: () async => attachFile(),
+                          style: TextButton.styleFrom(primary: Colors.grey),
+                        ),
+                      ],
+                    ),
+              Spacer(),
+              Align(
+                alignment: Alignment.bottomRight,
+                child: ButtonBar(
+                  children: [
+                    TextButton(
+                      child: Text('Cancel'),
+                      onPressed: () => Navigator.pop(context),
+                      style: TextButton.styleFrom(
+                        primary: Colors.grey,
+                      ),
+                    ),
+                    SizedBox(width: kDefaultPadding / 2),
+                    ElevatedButton(
+                      child: Text(isUpdating ? 'Update' : 'Create'),
+                      onPressed: canFinish ? () => onFinish() : null,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -215,7 +258,7 @@ class _FileAttachmentEditDialogState extends State<FileAttachmentEditDialog> {
       assert(file != null);
       // Add attachment to database.
       await futureLoadingIndicator<bool?>(
-              context, Database().addAttachment(attachment, file!))
+              context, Database().updateAttachment(attachment, file!))
           .then((success) {
         // If doc id is not null, it means that attachment was added successfully.
         if (success != null && success == true) {

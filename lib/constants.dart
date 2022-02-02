@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 
 /* --------------------------------- Colors --------------------------------- */
 
+const String kApplicationId = 'UVX7IXCOS1';
+const String kApiKey = '8314848f755b147ef47a60b462eb575a';
+
 const Color kFontWhite = Color(0xFFFFFFFF);
 const Color kFontBlack = Color(0xFF0E1111);
 

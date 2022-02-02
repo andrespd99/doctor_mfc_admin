@@ -1,4 +1,6 @@
 import 'package:doctor_mfc_admin/models/enums/attachment_type.dart';
+import 'package:doctor_mfc_admin/models/enums/search_entity_type.dart';
+import 'package:doctor_mfc_admin/models/system.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:uuid/uuid.dart';
@@ -32,7 +34,8 @@ abstract class Attachment {
   }) : controller = AttachmentController(title: title, url: url);
 
   factory Attachment.fromMap(Map<String, dynamic> data) {
-    if (codeToTypeMap[data['type']] == AttachmentType.LINK) {
+    if (AttachmentTypeConverter.codeToType(data['type']) ==
+        AttachmentType.LINK) {
       return LinkAttachment(
         title: data['title'],
         url: data['url'],
@@ -74,7 +77,7 @@ class FileAttachment extends Attachment {
     return FileAttachment(
       id: id,
       systemId: data['systemId'],
-      type: codeToTypeMap[data['type'] as String]!,
+      type: AttachmentTypeConverter.codeToType(data['type'])!,
       title: data['title'],
       fileUrl: data['fileUrl'],
       fileName: data['fileName'],
@@ -92,11 +95,24 @@ class FileAttachment extends Attachment {
     return {
       'id': id,
       if (type == AttachmentType.DOCUMENTATION) 'systemId': systemId,
-      'type': typeToCodeMap[type],
+      'type': AttachmentTypeConverter.typeToCode(type),
       'title': title,
       'fileName': fileName,
       'fileSize': fileSize,
       'fileUrl': fileUrl,
+    };
+  }
+
+  Map<String, dynamic> searchResultToMap(System? system) {
+    assert(type == AttachmentType.DOCUMENTATION && system != null ||
+        type != AttachmentType.DOCUMENTATION);
+    return {
+      // Set attachment entity type depending of whether it is a Documentation or a Guide.
+      'entityTypeId': SearchTypeConverter.attachmentTypeToSearchCode(type),
+      if (type == AttachmentType.DOCUMENTATION) 'systemBrand': system?.brand,
+      if (type == AttachmentType.DOCUMENTATION)
+        'systemDescription': system?.description,
+      ...this.toMap(),
     };
   }
 
@@ -132,7 +148,7 @@ class LinkAttachment extends Attachment {
     return {
       'title': title,
       'url': url,
-      'type': typeToCodeMap[type],
+      'type': AttachmentTypeConverter.typeToCode(type),
     };
   }
 }

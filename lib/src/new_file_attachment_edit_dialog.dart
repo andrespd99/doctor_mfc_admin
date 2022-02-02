@@ -229,7 +229,7 @@ class _NewFileAttachmentEditDialogState
     // File is being attached for the first time.
     // Add attachment to database.
     await futureLoadingIndicator<bool?>(
-            context, Database().addAttachment(attachment, file!))
+            context, Database().updateAttachment(attachment, file!))
         .then((success) {
       // If doc id is not null, it means that attachment was added successfully.
       if (success != null && success == true) {

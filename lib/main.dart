@@ -1,6 +1,9 @@
 import 'package:doctor_mfc_admin/constants.dart';
+import 'package:doctor_mfc_admin/models/attachment.dart';
+import 'package:doctor_mfc_admin/models/enums/attachment_type.dart';
 import 'package:doctor_mfc_admin/services/current_system_selected_service.dart';
 import 'package:doctor_mfc_admin/services/page_change_service.dart';
+import 'package:doctor_mfc_admin/src/file_attatchment_edit_dialog.dart';
 
 import 'package:doctor_mfc_admin/src/index_page.dart';
 import 'package:doctor_mfc_admin/src/login_page.dart';

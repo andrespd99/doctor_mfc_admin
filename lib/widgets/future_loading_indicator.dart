@@ -9,7 +9,6 @@ Future<T?> futureLoadingIndicator<T>(BuildContext context, Future<T> future) {
     context: context,
     barrierDismissible: false,
     builder: (context) {
-      // future.then<T?>((result) {
       future.then<T?>((result) {
         // If the future completes successfully, dismiss the dialog.
         Navigator.pop(context, result);

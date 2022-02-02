@@ -3,6 +3,7 @@ import 'package:doctor_mfc_admin/models/attachment.dart';
 import 'package:doctor_mfc_admin/models/enums/attachment_type.dart';
 import 'package:doctor_mfc_admin/models/solution.dart';
 import 'package:doctor_mfc_admin/models/step.dart' as my;
+import 'package:doctor_mfc_admin/models/system.dart';
 import 'package:doctor_mfc_admin/services/current_system_selected_service.dart';
 import 'package:doctor_mfc_admin/src/file_attatchment_edit_dialog.dart';
 import 'package:doctor_mfc_admin/widgets/base_input.dart';
@@ -694,19 +695,18 @@ class _SolutionPageState extends State<SolutionPage> {
   }
 
   void changeAttachmentType(int i, AttachmentType? selectedType) {
-    String? systemId =
+    System? system =
         Provider.of<CurrentSystemSelectedService>(context, listen: false)
-            .currentSelectedSystem
-            ?.id;
+            .currentSelectedSystem;
 
     assert(selectedType != null);
-    assert(systemId != null);
+    assert(system != null);
 
     if (selectedType == AttachmentType.DOCUMENTATION ||
         selectedType == AttachmentType.GUIDE) {
       attachments[i] = FileAttachment(
         type: selectedType!,
-        systemId: systemId!,
+        systemId: system!.id,
       );
     } else if (selectedType == AttachmentType.LINK) {
       attachments[i] = LinkAttachment();
