@@ -15,14 +15,14 @@ import 'package:doctor_mfc_admin/widgets/green_elevated_button.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-class ManageSystemsPage extends StatefulWidget {
-  ManageSystemsPage({Key? key}) : super(key: key);
+class SystemsPage extends StatefulWidget {
+  SystemsPage({Key? key}) : super(key: key);
 
   @override
-  _ManageSystemsPageState createState() => _ManageSystemsPageState();
+  _SystemsPageState createState() => _SystemsPageState();
 }
 
-class _ManageSystemsPageState extends State<ManageSystemsPage> {
+class _SystemsPageState extends State<SystemsPage> {
   List<String> brands = [];
   List<String> systemTypes = [];
   late Map<String, int> lengths;

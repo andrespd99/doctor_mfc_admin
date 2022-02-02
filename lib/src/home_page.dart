@@ -2,7 +2,7 @@ import 'package:doctor_mfc_admin/constants.dart';
 
 import 'package:doctor_mfc_admin/services/page_change_service.dart';
 
-import 'package:doctor_mfc_admin/src/manage_systems_page.dart';
+import 'package:doctor_mfc_admin/src/systems_page.dart';
 import 'package:doctor_mfc_admin/widgets/body_template.dart';
 import 'package:doctor_mfc_admin/widgets/green_elevated_button.dart';
 import 'package:doctor_mfc_admin/widgets/section_header.dart';
@@ -41,7 +41,7 @@ class _HomePageState extends State<HomePage> {
         shortcutButton(
           onPressed: () =>
               Provider.of<PageChangeService>(context, listen: false)
-                  .changePage(ManageSystemsPage()),
+                  .changePage(SystemsPage()),
           title: 'Manage systems',
         ),
         shortcutButton(

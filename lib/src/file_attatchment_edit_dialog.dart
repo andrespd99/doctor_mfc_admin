@@ -29,9 +29,13 @@ class FileAttachmentEditDialog extends StatefulWidget {
 }
 
 class _FileAttachmentEditDialogState extends State<FileAttachmentEditDialog> {
-  late FileAttachment attachment = widget.attachment;
+  final _searcherController = TextEditingController();
 
+  late FileAttachment attachment = widget.attachment;
   bool get attachmentIsEmpty => attachment.isFileAttached;
+
+  /// Returns `true` if the attachment was selected from database.
+  bool fileLoadedFromDatabase = false;
 
   /// File selected from device.
   PlatformFile? file;
@@ -93,6 +97,13 @@ class _FileAttachmentEditDialogState extends State<FileAttachmentEditDialog> {
               SectionHeader(title: '$dialogTitle'),
               SizedBox(height: kDefaultPadding),
               TypeAheadField(
+                textFieldConfiguration: TextFieldConfiguration(
+                  controller: _searcherController,
+                  decoration: InputDecoration(
+                    hintText:
+                        'Search existing ${attachmentTypeToStr}s by title',
+                  ),
+                ),
                 suggestionsCallback: (query) async {
                   final result =
                       await SearchEngine().searchFile(query, attachment.type);
@@ -117,23 +128,11 @@ class _FileAttachmentEditDialogState extends State<FileAttachmentEditDialog> {
                     style: TextStyle(fontWeight: FontWeight.w300),
                   ),
                 ),
-                onSuggestionSelected: (FileAttachment selectedAttachment) {
-                  setState(() {
-                    attachment = selectedAttachment;
-                    isFileAttached = true;
-                    fileName = attachment.fileName;
-                    fileSize = attachment.fileSize;
-                  });
-                  setState(() {});
-                },
+                onSuggestionSelected: (FileAttachment selectedAttachment) =>
+                    onSugestionSelected(selectedAttachment),
                 noItemsFoundBuilder: (context) =>
                     ListTile(title: Text('No results found')),
               ),
-              // TextField(
-              //   decoration: InputDecoration(
-              //     hintText: 'Search existing $attachmentTypeToStr',
-              //   ),
-              // ),
               SizedBox(height: kDefaultPadding * 3),
               SectionSubheader('Title for $attachmentTypeToStr'),
               SizedBox(height: kDefaultPadding / 3),
@@ -219,6 +218,16 @@ class _FileAttachmentEditDialogState extends State<FileAttachmentEditDialog> {
     );
   }
 
+  void onSugestionSelected(FileAttachment selectedAttachment) {
+    isFileAttached = true;
+    fileLoadedFromDatabase = true;
+    attachment = selectedAttachment;
+    fileName = attachment.fileName;
+    fileSize = attachment.fileSize;
+    _searcherController.clear();
+    setState(() {});
+  }
+
   Future attachFile() async {
     file = await FilePickerService.pickFile();
     // If file is uploaded successfully, clear URL.
@@ -242,8 +251,14 @@ class _FileAttachmentEditDialogState extends State<FileAttachmentEditDialog> {
   }
 
   Future onFinish() async {
-    // File was already attached, and is not being changed.
-    if (isFileAttached) {
+    if (fileLoadedFromDatabase) {
+      // If file is loaded from database, no other steps are needed because the
+      // document already exists. So just pop the dialog and execute callback.
+      Navigator.of(context).pop();
+      widget.onAttachmentCallback(attachment);
+    } else if (isFileAttached) {
+      // File was already attached, and is not being changed.
+
       await futureLoadingIndicator<bool?>(
               context, Database().updateAttachment(attachment, file))
           .then((success) {

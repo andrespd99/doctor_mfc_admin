@@ -149,7 +149,7 @@ class _SolutionPageState extends State<SolutionPage> {
                   value: attachments[i].type,
                 ),
                 SizedBox(width: kDefaultPadding / 2),
-                ...attachmentTileWidgets(attachments[i]),
+                ...attachmentTileWidgets(i),
                 attachmentsManageModeEnabled
                     ? TextButton(
                         child: Text('Delete'),
@@ -165,7 +165,8 @@ class _SolutionPageState extends State<SolutionPage> {
     );
   }
 
-  List<Widget> attachmentTileWidgets(Attachment attachment) {
+  List<Widget> attachmentTileWidgets(int index) {
+    Attachment attachment = attachments[index];
     if (attachment is LinkAttachment) {
       // Attachment is a link.
       return [
@@ -195,7 +196,7 @@ class _SolutionPageState extends State<SolutionPage> {
         return [
           ElevatedButton(
             child: Text('Attach'),
-            onPressed: () => openAttachmentEditDialog(attachment),
+            onPressed: () => openAttachmentEditDialog(attachment, index),
           ),
         ];
       } else {
@@ -223,7 +224,8 @@ class _SolutionPageState extends State<SolutionPage> {
                 ? Container()
                 : ElevatedButton(
                     child: Text('Change'),
-                    onPressed: () => openAttachmentEditDialog(attachment),
+                    onPressed: () =>
+                        openAttachmentEditDialog(attachment, index),
                   ),
           ),
         ];
@@ -672,15 +674,14 @@ class _SolutionPageState extends State<SolutionPage> {
     setState(() {});
   }
 
-  void openAttachmentEditDialog(FileAttachment attachment) {
+  void openAttachmentEditDialog(FileAttachment attachment, int index) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return FileAttachmentEditDialog(
           attachment: attachment,
-          onAttachmentCallback: (attachment) {
-            setState(() {});
-          },
+          onAttachmentCallback: (attachment) =>
+              onAttachmentCallback(attachment, index),
         );
       },
     );

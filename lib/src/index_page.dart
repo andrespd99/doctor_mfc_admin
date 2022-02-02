@@ -4,7 +4,7 @@ import 'package:doctor_mfc_admin/models/enums/attachment_type.dart';
 import 'package:doctor_mfc_admin/services/page_change_service.dart';
 import 'package:doctor_mfc_admin/src/files_page.dart';
 import 'package:doctor_mfc_admin/src/home_page.dart';
-import 'package:doctor_mfc_admin/src/manage_systems_page.dart';
+import 'package:doctor_mfc_admin/src/systems_page.dart';
 import 'package:doctor_mfc_admin/src/users_page.dart';
 import 'package:doctor_mfc_admin/widgets/custom_progress_indicator.dart';
 import 'package:doctor_mfc_admin/widgets/powered_by_takeoff.dart';
@@ -32,7 +32,7 @@ class _IndexPageState extends State<IndexPage>
       ),
       1: DrawerItem(
         title: 'Systems',
-        child: ManageSystemsPage(),
+        child: SystemsPage(),
       ),
       2: DrawerItem(
         title: 'Documentation',
