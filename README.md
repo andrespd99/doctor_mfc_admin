@@ -38,18 +38,18 @@ To deploy this project, you will need Flutter SDK and
 Android Studio installed in your computer. Then run the following command:
 
 ```bash
-  // First run this command to get all the dependencies used for this project
+  # First run this command to get all the dependencies used for this project
   dart pub get
 
-  // Then run the following command to deploy in web.
-  // For Chrome users:
+  # Then run the following command to deploy in web.
+  # For Chrome users:
   flutter run -d Chrome 
 
-  // For Safari users:
+  # For Safari users:
   flutter run -d Safari
 
-  // For other explorers, you should look up what tag to use in 
-  // order to run the project in that explorer:
+  # For other explorers, you should look up what tag to use in 
+  # order to run the project in that explorer:
   flutter run -d $EXPLORER_NAME
 ```
 
