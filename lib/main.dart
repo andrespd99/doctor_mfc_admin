@@ -7,7 +7,7 @@ import 'package:doctor_mfc_admin/src/file_attatchment_edit_dialog.dart';
 
 import 'package:doctor_mfc_admin/src/index_page.dart';
 import 'package:doctor_mfc_admin/src/login_page.dart';
-import 'package:doctor_mfc_admin/src/manage_systems_page.dart';
+import 'package:doctor_mfc_admin/src/systems_page.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -37,7 +37,7 @@ class MyApp extends StatelessWidget {
         home: LoginPage(),
         routes: {
           'home': (context) => IndexPage(),
-          'manageSystems': (context) => ManageSystemsPage(),
+          'manageSystems': (context) => SystemsPage(),
         },
         builder: (context, child) => Material(child: child),
       ),
