@@ -6,16 +6,17 @@ class CustomAlertDialog extends StatefulWidget {
   final String title;
   final String? subtitle;
   final List<Widget> body;
-  final Function() onFinish;
-  final String finishButtonTitle;
+  final Function()? onFinish;
+  final String? finishButtonTitle;
   final bool showBackButton;
   final bool isButtonEnabled;
 
+  /// If `onFinish` is not null, `finishButtonTitle` cannot be null either.
   CustomAlertDialog({
     required this.title,
     required this.body,
-    required this.onFinish,
-    required this.finishButtonTitle,
+    this.onFinish,
+    this.finishButtonTitle,
     this.subtitle,
     this.showBackButton = true,
     this.isButtonEnabled = true,
@@ -60,17 +61,20 @@ class _CustomAlertDialogState extends State<CustomAlertDialog> {
   }
 
   Widget finishButton() {
-    return Positioned(
-      bottom: 0,
-      right: 0,
-      child: ElevatedButton(
-        child: Text('${widget.finishButtonTitle}'),
-        onPressed: widget.isButtonEnabled ? () => widget.onFinish() : null,
-        style: ElevatedButton.styleFrom(
-          visualDensity: VisualDensity.compact,
+    if (widget.finishButtonTitle == null)
+      return Container();
+    else
+      return Positioned(
+        bottom: 0,
+        right: 0,
+        child: ElevatedButton(
+          child: Text('${widget.finishButtonTitle!}'),
+          onPressed: widget.isButtonEnabled ? () => widget.onFinish!() : null,
+          style: ElevatedButton.styleFrom(
+            visualDensity: VisualDensity.compact,
+          ),
         ),
-      ),
-    );
+      );
   }
 
   Row heading() {

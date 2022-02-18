@@ -11,6 +11,7 @@ import 'package:doctor_mfc_admin/widgets/body_template.dart';
 
 import 'package:doctor_mfc_admin/widgets/future_loading_indicator.dart';
 import 'package:doctor_mfc_admin/widgets/object_elevated_button.dart';
+import 'package:doctor_mfc_admin/widgets/section_subheader.dart';
 import 'package:doctor_mfc_admin/widgets/section_subheader_with_add_button.dart';
 
 import 'package:flutter/material.dart';
@@ -26,9 +27,10 @@ class AddSystemPage extends StatefulWidget {
 class _AddSystemPageState extends State<AddSystemPage> {
   final modelController = TextEditingController();
   final brandController = TextEditingController();
-  final typeController = TextEditingController();
 
   List<Problem> problems = [];
+
+  String? selectedType;
 
   // Getters
   String get systemModel => modelController.text;
@@ -69,7 +71,7 @@ class _AddSystemPageState extends State<AddSystemPage> {
                       id: Uuid().v4(),
                       description: modelController.text,
                       brand: brandController.text,
-                      type: typeController.text,
+                      type: selectedType!,
                       problems: problems,
                     ),
                   ]),
@@ -112,15 +114,71 @@ class _AddSystemPageState extends State<AddSystemPage> {
   Widget attributeInputs() {
     return Container(
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           attributeInput(title: 'Model', controller: modelController),
           SizedBox(width: kDefaultPadding),
           attributeInput(title: 'Brand', controller: brandController),
           SizedBox(width: kDefaultPadding),
-          attributeInput(title: 'Type', controller: typeController),
+          systemSelectionSection(),
         ],
       ),
     );
+  }
+
+  Widget systemSelectionSection() {
+    return Expanded(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SectionSubheader('Type'),
+          SizedBox(height: kDefaultPadding / 2),
+          Container(
+            decoration: BoxDecoration(
+              border: Border.all(
+                color: Colors.grey,
+                width: 1.5,
+              ),
+              borderRadius: BorderRadius.circular(kDefaultBorderRadius),
+            ),
+            child: FutureBuilder<List<String>>(
+              future: Database().getAllSystemTypes(),
+              builder: (context, snapshot) {
+                return DropdownButtonHideUnderline(
+                  child: ButtonTheme(
+                    alignedDropdown: true,
+                    child: DropdownButton<String>(
+                      isExpanded: true,
+                      value: selectedType,
+                      onChanged: (value) =>
+                          setState(() => selectedType = value),
+                      items: [
+                        if (!snapshot.hasData)
+                          DropdownMenuItem(child: Text('Loading...')),
+                        if (snapshot.hasData) ...dropdownSystemItems(snapshot),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+          SizedBox(height: kDefaultPadding),
+        ],
+      ),
+    );
+  }
+
+  List<DropdownMenuItem<String>> dropdownSystemItems(
+      AsyncSnapshot<List<String>> snapshot) {
+    assert(snapshot.hasData);
+
+    return snapshot.data!.map((type) {
+      return DropdownMenuItem<String>(
+        value: type,
+        child: Text(type),
+      );
+    }).toList();
   }
 
   Widget attributeInput(
@@ -169,7 +227,6 @@ class _AddSystemPageState extends State<AddSystemPage> {
   }
 
   void cleanEntries() {
-    typeController.clear();
     modelController.clear();
     brandController.clear();
 
@@ -188,7 +245,7 @@ class _AddSystemPageState extends State<AddSystemPage> {
   bool canFinish() {
     if (modelController.text.isNotEmpty &&
         brandController.text.isNotEmpty &&
-        typeController.text.isNotEmpty) {
+        selectedType != null) {
       return true;
     } else
       return false;
@@ -197,7 +254,6 @@ class _AddSystemPageState extends State<AddSystemPage> {
   void addListeners() {
     modelController.addListener(() => setState(() {}));
     brandController.addListener(() => setState(() {}));
-    typeController.addListener(() => setState(() {}));
   }
 
   onError([Object? error, StackTrace? stackTrace]) {

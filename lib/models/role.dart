@@ -4,7 +4,7 @@ enum Role {
   SUPER_ADMIN,
 }
 
-class UserRole {
+class RoleConverter {
   static Map<Role, String> _roleToId = {
     Role.USER: 'user',
     Role.ADMIN: 'admin',

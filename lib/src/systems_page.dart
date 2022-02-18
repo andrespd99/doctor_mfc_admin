@@ -32,20 +32,21 @@ class _SystemsPageState extends State<SystemsPage> {
     return BodyTemplate(
       title: 'Manage systems',
       body: [
-        Row(
-          children: [
-            Container(
-              width: MediaQuery.of(context).size.width * 0.3,
-              child: TextField(
-                decoration: InputDecoration(
-                  hintText: 'Search for a system',
-                ),
-              ),
-            ),
-            SizedBox(width: kDefaultPadding / 2),
-            addSystemButton(),
-          ],
-        ),
+        addSystemButton(),
+        // TODO: Add searcher
+        // Row(
+        //   children: [
+        //     Container(
+        //       width: MediaQuery.of(context).size.width * 0.3,
+        //       child: TextField(
+        //         decoration: InputDecoration(
+        //           hintText: 'Search for a system',
+        //         ),
+        //       ),
+        //     ),
+        //     SizedBox(width: kDefaultPadding / 2),
+        //   ],
+        // ),
         SizedBox(height: kDefaultPadding * 2),
         FutureBuilder<Map<String, dynamic>>(
             future: GlobalValues().getGlobalValues(),

@@ -30,7 +30,10 @@ class _CustomCardState extends State<CustomCard> {
   Widget build(BuildContext context) {
     return Container(
       padding: EdgeInsets.all(kDefaultPadding),
-      color: Colors.black.withOpacity(0.05),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(kDefaultBorderRadius),
+        color: Colors.black.withOpacity(0.05),
+      ),
       child: Row(
         children: [
           Expanded(

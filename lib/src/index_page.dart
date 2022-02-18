@@ -1,12 +1,15 @@
 import 'package:doctor_mfc_admin/constants.dart';
 import 'package:doctor_mfc_admin/models/drawer_item.dart';
 import 'package:doctor_mfc_admin/models/enums/attachment_type.dart';
+import 'package:doctor_mfc_admin/services/mfc_auth_service.dart';
 import 'package:doctor_mfc_admin/services/page_change_service.dart';
 import 'package:doctor_mfc_admin/src/files_page.dart';
 import 'package:doctor_mfc_admin/src/home_page.dart';
 import 'package:doctor_mfc_admin/src/systems_page.dart';
+import 'package:doctor_mfc_admin/src/user_requests_page.dart';
 import 'package:doctor_mfc_admin/src/users_page.dart';
 import 'package:doctor_mfc_admin/widgets/custom_progress_indicator.dart';
+import 'package:doctor_mfc_admin/widgets/future_loading_indicator.dart';
 import 'package:doctor_mfc_admin/widgets/powered_by_takeoff.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -27,8 +30,8 @@ class _IndexPageState extends State<IndexPage>
   final Map<int, DrawerItem> itemsMap = Map.from(
     {
       0: DrawerItem(
-        title: 'Home',
-        child: HomePage(),
+        title: 'User requests',
+        child: UserRequestsPage(),
       ),
       1: DrawerItem(
         title: 'Systems',
@@ -52,15 +55,11 @@ class _IndexPageState extends State<IndexPage>
         title: 'Users',
         child: UsersPage(),
       ),
-      5: DrawerItem(
-        title: 'Log out',
-        child: Container(),
-      ),
     },
   );
 
   // Selected drawer item index.
-  late int selectedIndex = 1;
+  late int selectedIndex = 0;
 
   // Used to keep drawer state.
   late bool drawerIsOpen = false;
@@ -132,6 +131,7 @@ class _IndexPageState extends State<IndexPage>
       curve: Curves.easeInOutQuart,
       width: (drawerIsOpen) ? bodyWidthDrawerOpen : bodyWidthDrawerClosed,
       child: StreamBuilder<Widget>(
+        initialData: selectedIndexPage,
         stream: Provider.of<PageChangeService>(context).currentPage,
         builder: (BuildContext context, AsyncSnapshot<Widget> snapshot) {
           if (snapshot.hasData) {
@@ -145,32 +145,6 @@ class _IndexPageState extends State<IndexPage>
       ),
     );
   }
-
-  // Widget bodyBuilder() {
-  //   double bodyWidthDrawerClosed =
-  //       MediaQuery.of(context).size.width - closedDrawerWidth();
-
-  //   double bodyWidthDrawerOpen =
-  //       MediaQuery.of(context).size.width - drawerWidth;
-
-  //   return AnimatedContainer(
-  //     duration: drawerDuration,
-  //     curve: Curves.easeInOutQuart,
-  //     width: (drawerIsOpen) ? bodyWidthDrawerOpen : bodyWidthDrawerClosed,
-  //     child: StreamBuilder<Widget>(
-  //       stream: Provider.of<PageChangeService>(context).currentPage,
-  //       builder: (BuildContext context, AsyncSnapshot<Widget> snapshot) {
-  //         if (snapshot.hasData) {
-  //           Widget body = snapshot.data!;
-
-  //           return body;
-  //         } else {
-  //           return CustomProgressIndicator();
-  //         }
-  //       },
-  //     ),
-  //   );
-  // }
 
   AnimatedBuilder drawerBuilder() {
     return AnimatedBuilder(
@@ -209,12 +183,37 @@ class _IndexPageState extends State<IndexPage>
       // List of items.
       Container(
         padding: EdgeInsets.only(left: kDefaultPadding * 2),
-        child: ListView.separated(
-          shrinkWrap: true,
-          itemCount: itemsMap.length,
-          itemBuilder: (context, i) => drawerItem(i),
-          separatorBuilder: (context, i) =>
-              SizedBox(height: kDefaultPadding * 1.5),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            ListView.separated(
+              shrinkWrap: true,
+              itemCount: itemsMap.length,
+              itemBuilder: (context, i) => drawerItem(i),
+              separatorBuilder: (context, i) =>
+                  SizedBox(height: kDefaultPadding * 1.5),
+            ),
+            SizedBox(height: kDefaultPadding * 2),
+            TextButton(
+              child: Text(
+                'Log out',
+                style: TextStyle(
+                  shadows: [
+                    Shadow(
+                      offset: Offset(0, 0),
+                      blurRadius: 10,
+                      color: Colors.black26,
+                    )
+                  ],
+                ),
+              ),
+              style: TextButton.styleFrom(primary: Colors.red),
+              onPressed: () => futureLoadingIndicator(
+                context,
+                Provider.of<MFCAuthService>(context, listen: false).signOut(),
+              ),
+            ),
+          ],
         ),
       ),
 

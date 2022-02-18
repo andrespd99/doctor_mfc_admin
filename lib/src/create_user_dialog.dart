@@ -1,4 +1,5 @@
 import 'package:doctor_mfc_admin/constants.dart';
+import 'package:doctor_mfc_admin/models/validators.dart';
 
 import 'package:doctor_mfc_admin/services/database.dart';
 import 'package:doctor_mfc_admin/widgets/custom_alert_dialog.dart';
@@ -18,10 +19,10 @@ class _CreateUserDialogState extends State<CreateUserDialog> {
   final passwordController = TextEditingController();
   final confirmPasswordController = TextEditingController();
 
-  String? emailFieldError;
-  String? nameFieldError;
-  String? passwordFieldError;
-  String? confirmPasswordFieldError;
+  bool? validName;
+  bool? validEmail;
+  bool? validPassword;
+  bool? validConfirmPassword;
 
   @override
   Widget build(BuildContext context) {
@@ -31,88 +32,108 @@ class _CreateUserDialogState extends State<CreateUserDialog> {
       body: [
         TextField(
           controller: nameController,
+          onChanged: (value) => validateName(value),
           decoration: InputDecoration(
             labelText: 'First and Last name',
-            errorText: nameFieldError,
+            errorText: (validName != null && validName != true)
+                ? Validators.nameErrorMessage
+                : null,
           ),
         ),
         SizedBox(height: kDefaultPadding),
         TextField(
           controller: emailController,
-          decoration:
-              InputDecoration(labelText: 'Email', errorText: emailFieldError),
+          onChanged: (value) => validateEmail(value),
+          decoration: InputDecoration(
+            labelText: 'Email',
+            errorText: (validEmail != null && validEmail != true)
+                ? Validators.emailErrorMessage
+                : null,
+          ),
         ),
         SizedBox(height: kDefaultPadding),
         TextField(
           controller: passwordController,
+          onChanged: (value) => validatePassword(value),
           decoration: InputDecoration(
             labelText: 'Password',
-            errorText: passwordFieldError,
+            errorText: (validPassword != null && validPassword != true)
+                ? Validators.passwordErrorMessage
+                : null,
           ),
           obscureText: true,
         ),
         SizedBox(height: kDefaultPadding),
         TextField(
           controller: confirmPasswordController,
+          onChanged: (value) => validateConfirmPassword(),
           decoration: InputDecoration(
             labelText: 'Confirm password',
-            errorText: confirmPasswordFieldError,
+            errorText:
+                (validConfirmPassword != null && validConfirmPassword != true)
+                    ? 'Passwords do not match'
+                    : null,
           ),
           obscureText: true,
         ),
       ],
       finishButtonTitle: 'Create user',
       onFinish: () => onCreateUser(context),
+      isButtonEnabled: inputsAreValid(),
     );
   }
 
-  void onCreateUser(BuildContext context) {
-    bool isValid = true;
-    setState(() {
-      emailFieldError = null;
-      nameFieldError = null;
-      passwordFieldError = null;
-      confirmPasswordFieldError = null;
-    });
+  void validateName(String value) =>
+      setState(() => validName = Validators.nameValidator.hasMatch(value));
 
-    if (passwordController.text != confirmPasswordController.text) {
-      isValid = false;
-      setState(() {
-        confirmPasswordFieldError = 'Passwords do not match';
-      });
-    }
-    if (emailController.text.isEmpty) {
-      isValid = false;
-      setState(() {
-        emailFieldError = 'Email is required';
-      });
-    }
-    if (nameController.text.isEmpty) {
-      isValid = false;
-      setState(() {
-        nameFieldError = 'Name is required';
-      });
-    }
-    if (passwordController.text.isEmpty) {
-      isValid = false;
-      setState(() {
-        passwordFieldError = 'Password is required';
-      });
-    }
-    if (isValid) {
-      futureLoadingIndicator(
-        context,
-        Database().createUser(
-          userName: nameController.text,
-          userEmail: emailController.text,
-          password: passwordController.text,
-        ),
-      ).then((value) {
-        Navigator.of(context).pop();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('User created successfully')),
-        );
-      });
-    }
+  void validateEmail(String value) {
+    return setState(
+        () => validEmail = Validators.emailValidator.hasMatch(value));
+  }
+
+  void validatePassword(String value) {
+    return setState(
+      () => validPassword = Validators.passwordValidator.hasMatch(value),
+    );
+  }
+
+  void validateConfirmPassword() {
+    return setState(() {
+      validConfirmPassword =
+          confirmPasswordController.text == passwordController.text;
+    });
+  }
+
+  /// Returns true if all input fields are valid and not empty.
+  bool inputsAreValid() {
+    if (nameController.text.isNotEmpty &&
+        emailController.text.isNotEmpty &&
+        passwordController.text.isNotEmpty &&
+        confirmPasswordController.text.isNotEmpty &&
+        validEmail == true &&
+        validName == true &&
+        validPassword == true &&
+        validConfirmPassword == true) {
+      return true;
+    } else
+      return false;
+  }
+
+  void onCreateUser(BuildContext context) {
+    assert(inputsAreValid() == true);
+
+    futureLoadingIndicator(
+      context,
+      Database().createUser(
+        userName: nameController.text,
+        userEmail: emailController.text,
+        password: passwordController.text,
+      ),
+    ).then((value) {
+      Navigator.of(context).pop();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('User created successfully')),
+      );
+    });
   }
 }

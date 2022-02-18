@@ -1,12 +1,10 @@
+import 'package:doctor_mfc_admin/auth_page.dart';
 import 'package:doctor_mfc_admin/constants.dart';
-import 'package:doctor_mfc_admin/models/attachment.dart';
-import 'package:doctor_mfc_admin/models/enums/attachment_type.dart';
 import 'package:doctor_mfc_admin/services/current_system_selected_service.dart';
+import 'package:doctor_mfc_admin/services/mfc_auth_service.dart';
 import 'package:doctor_mfc_admin/services/page_change_service.dart';
-import 'package:doctor_mfc_admin/src/file_attatchment_edit_dialog.dart';
 
 import 'package:doctor_mfc_admin/src/index_page.dart';
-import 'package:doctor_mfc_admin/src/login_page.dart';
 import 'package:doctor_mfc_admin/src/systems_page.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
@@ -30,15 +28,12 @@ class MyApp extends StatelessWidget {
         Provider<PageChangeService>(create: (_) => PageChangeService()),
         Provider<CurrentSystemSelectedService>(
             create: (_) => CurrentSystemSelectedService()),
+        Provider<MFCAuthService>(create: (_) => MFCAuthService()),
       ],
       child: MaterialApp(
         title: 'Doctor MFC - ADMIN',
         theme: theme(),
-        home: LoginPage(),
-        routes: {
-          'home': (context) => IndexPage(),
-          'manageSystems': (context) => SystemsPage(),
-        },
+        home: AuthPage(),
         builder: (context, child) => Material(child: child),
       ),
     );

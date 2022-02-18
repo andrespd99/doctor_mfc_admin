@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:doctor_mfc_admin/constants.dart';
 import 'package:doctor_mfc_admin/models/attachment.dart';
 import 'package:doctor_mfc_admin/models/enums/attachment_type.dart';
+import 'package:doctor_mfc_admin/models/system.dart';
 import 'package:doctor_mfc_admin/services/database.dart';
 import 'package:doctor_mfc_admin/src/file_attatchment_edit_dialog.dart';
 import 'package:doctor_mfc_admin/src/new_file_attachment_edit_dialog.dart';
@@ -22,7 +23,7 @@ class FilesPage extends StatefulWidget {
 class _FilesPageState extends State<FilesPage> {
   bool get isDocumentationType => widget.type == AttachmentType.DOCUMENTATION;
 
-  late String title = isDocumentationType ? 'Documentation' : 'How-to Guides';
+  late String title = isDocumentationType ? 'Documentation' : 'How-to guides';
 
   @override
   Widget build(BuildContext context) {
@@ -30,20 +31,21 @@ class _FilesPageState extends State<FilesPage> {
     return BodyTemplate(
       title: '$title',
       body: [
-        Row(
-          children: [
-            Container(
-              width: MediaQuery.of(context).size.width * 0.3,
-              child: TextField(
-                decoration: InputDecoration(
-                  hintText: 'Search for a system',
-                ),
-              ),
-            ),
-            SizedBox(width: kDefaultPadding / 2),
-            addSystemButton(),
-          ],
-        ),
+        addFileButton(),
+        // TODO: Add searcher.
+        // Row(
+        //   children: [
+        //     Container(
+        //       width: MediaQuery.of(context).size.width * 0.3,
+        //       child: TextField(
+        //         decoration: InputDecoration(
+        //           hintText: 'Search for a file',
+        //         ),
+        //       ),
+        //     ),
+        //     SizedBox(width: kDefaultPadding / 2),
+        //   ],
+        // ),
         SizedBox(height: kDefaultPadding),
         StreamBuilder<QuerySnapshot<FileAttachment>>(
           stream: isDocumentationType
@@ -84,19 +86,30 @@ class _FilesPageState extends State<FilesPage> {
   List<Widget> documentationCardBody(FileAttachment document) {
     return [
       SizedBox(height: kDefaultPadding / 2),
-      Row(
-        children: [
-          Text(
-            'System ID: ',
-            style: TextStyle(fontWeight: FontWeight.bold),
-          ),
-          Text('${document.systemId}')
-        ],
+      Container(
+        height: 18.0,
+        child: StreamBuilder<DocumentSnapshot<System?>>(
+          stream: Database().getSystemSnapshotById(document.systemId!),
+          builder: (context, snapshot) {
+            if (snapshot.hasData) {
+              System system = snapshot.data!.data()!;
+              return Text(
+                '${system.brand} ${system.description}',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.grey,
+                ),
+              );
+            } else {
+              return Container();
+            }
+          },
+        ),
       ),
     ];
   }
 
-  GreenElevatedButton addSystemButton() {
+  GreenElevatedButton addFileButton() {
     return GreenElevatedButton(
       child: Text(isDocumentationType ? 'Add documentation' : 'Add guide'),
       onPressed: () => onAddPressed(),

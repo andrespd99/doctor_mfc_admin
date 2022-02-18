@@ -76,7 +76,10 @@ class _UsersPageState extends State<UsersPage> {
   Widget userCard(AppUser user) {
     return Container(
       padding: EdgeInsets.all(kDefaultPadding),
-      color: Colors.black.withOpacity(0.05),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(kDefaultBorderRadius),
+        color: Colors.black.withOpacity(0.05),
+      ),
       child: Row(
         children: [
           Column(

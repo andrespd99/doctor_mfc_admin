@@ -23,7 +23,7 @@ class AppUser {
       id: id,
       userName: data['userName'],
       userEmail: data['userEmail'],
-      role: UserRole.getRoleFromId(data['role']),
+      role: RoleConverter.getRoleFromId(data['role']),
       disabled: data['disabled'],
     );
   }
@@ -32,7 +32,7 @@ class AppUser {
     return {
       'userName': userName,
       'userEmail': userEmail,
-      'role': UserRole.getRoleId(role),
+      'role': RoleConverter.getRoleId(role),
       'disabled': (disabled != null) ? disabled : false,
     };
   }

@@ -677,7 +677,7 @@ class _SolutionPageState extends State<SolutionPage> {
   void openAttachmentEditDialog(FileAttachment attachment, int index) {
     showDialog(
       context: context,
-      builder: (BuildContext context) {
+      builder: (context) {
         return FileAttachmentEditDialog(
           attachment: attachment,
           onAttachmentCallback: (attachment) =>

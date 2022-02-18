@@ -6,6 +6,7 @@ import 'package:doctor_mfc_admin/models/attachment.dart';
 import 'package:doctor_mfc_admin/models/enums/attachment_type.dart';
 
 import 'package:doctor_mfc_admin/models/problem.dart';
+import 'package:doctor_mfc_admin/models/user_request.dart';
 import 'package:doctor_mfc_admin/models/role.dart';
 import 'package:doctor_mfc_admin/models/solution.dart';
 import 'package:doctor_mfc_admin/models/system.dart';
@@ -40,6 +41,17 @@ class Database {
         toFirestore: (fileAttachment, _) => fileAttachment.toMap(),
       );
 
+  /// User requests collection reference with to [UserRequest] converter.
+  final _requestsRef = FirebaseFirestore.instance
+      .collection('requests')
+      .withConverter<UserRequest>(
+        fromFirestore: (snapshot, _) => UserRequest.fromMap(
+          id: snapshot.id,
+          data: snapshot.data()!,
+        ),
+        toFirestore: (userRequest, _) => userRequest.toMap(),
+      );
+
   /// Users collection reference with to [AppUser] converter.
   final _usersRef =
       FirebaseFirestore.instance.collection('users').withConverter<AppUser>(
@@ -49,6 +61,15 @@ class Database {
             ),
             toFirestore: (user, _) => user.toMap(),
           );
+
+  /// Returns a Future of all system types in Firebase Firestore.
+  Future<List<String>> getAllSystemTypes() {
+    return _firestore
+        .collection('globalVariables')
+        .doc('systemTypes')
+        .get()
+        .then((snapshot) => List.from(snapshot.data()?['systemTypes']));
+  }
 
   /// Returns a Future of all [System] objects in Firebase Firestore.
   Future<QuerySnapshot<System>> getAllSystems() => _systemsRef.get();
@@ -72,6 +93,43 @@ class Database {
   /// Returns a [Stream] of a [System] with given `id` in Firebase Firestore.
   Stream<DocumentSnapshot<System>> getSystemSnapshotById(String id) =>
       _systemsRef.doc(id).snapshots();
+
+  /// Returns the [Future] of all [UserRequest]s that have not been reviewed
+  ///  in Firebase Firestore.
+  Future<QuerySnapshot<UserRequest>> getUnreviewedUserRequests() async =>
+      _requestsRef
+          .where('reviewed', isEqualTo: false)
+          .orderBy('timestamp')
+          .get();
+
+  /// Returns the [DocumentSnapshot] of [AppUser] associated with the provided `id`.
+  Future<DocumentSnapshot<AppUser>> getUserDoc(String id) =>
+      _usersRef.doc(id).get();
+
+  /// Returns the [DocumentSnapshot] of [AppUser] associated with the provided `id`.
+  Future<DocumentSnapshot<AppUser>> getUserDocByEmail(String email) => _usersRef
+          .where('userEmail', isEqualTo: email)
+          .limit(1)
+          .get()
+          .then((result) {
+        // Assert that no more than one user has the given email.
+        assert(result.docs.length <= 1);
+
+        // Check if the user is registered.
+        if (result.docs.isEmpty) {
+          // If it's not registered, throw a FirebaseAuthException.
+          throw FirebaseAuthException(code: 'invalid-email');
+        } else
+          return result.docs.first;
+      });
+
+  /// Returns the [Future] of all [UserRequest]s that have already been reviewed
+  ///  in Firebase Firestore.
+  Future<QuerySnapshot<UserRequest>> getReviewedUserRequests() async =>
+      _requestsRef
+          .where('reviewed', isEqualTo: true)
+          .orderBy('timestamp')
+          .get();
 
   /// Adds all systems to Firebase Firestore and returns the future of this action.
   Future addSystems(List<System> systems) async {
@@ -326,6 +384,15 @@ class Database {
     } on Exception catch (e) {
       print(e);
     }
+  }
+
+  Future setRequestAsReviewed(UserRequest request) {
+    request.markAsReviewed();
+
+    return _firestore
+        .collection('requests')
+        .doc(request.id)
+        .set(request.toMap(), SetOptions(merge: true));
   }
 
   /// Disables user account with the given ID. This sets the user's document attribute 'disabled' to `true`.
