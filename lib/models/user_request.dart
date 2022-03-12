@@ -6,6 +6,7 @@ class UserRequest {
   String id;
   String userId;
   String userEmail;
+  String? reviewerEmail;
   Timestamp timestamp;
 
   RequestType requestType;
@@ -32,6 +33,7 @@ class UserRequest {
     required this.userEmail,
     required this.timestamp,
     required this.reviewed,
+    this.reviewerEmail,
     this.systemNameToAdd,
     this.systemBrandToAdd,
     this.systemToUpdate,
@@ -55,6 +57,7 @@ class UserRequest {
       systemToUpdate: data['systemToUpdate'],
       problemToUpdate: data['problemToUpdate'],
       solutionToUpdate: data['solutionToUpdate'],
+      reviewerEmail: data['reviewerEmail'],
       userId: data['userId'],
       userEmail: data['userEmail'],
       reviewed: data['reviewed'],
@@ -72,6 +75,7 @@ class UserRequest {
       if (systemToUpdate != null) 'systemToUpdate': systemToUpdate,
       if (problemToUpdate != null) 'problemToUpdate': problemToUpdate,
       if (solutionToUpdate != null) 'solutionToUpdate': solutionToUpdate,
+      if (reviewerEmail != null) 'reviewerEmail': reviewerEmail,
       'timestamp': timestamp,
       'userEmail': userEmail,
       'userId': userId,

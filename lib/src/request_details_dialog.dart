@@ -58,6 +58,22 @@ class _RequestDetailsDialogState extends State<RequestDetailsDialog> {
             ),
           ],
         ),
+        if (request.reviewerEmail != null) ...[
+          SizedBox(height: kDefaultPadding),
+          Row(
+            children: [
+              Text(
+                'Reviewed by: ',
+                style: TextStyle(
+                    color: kPrimaryColor, fontWeight: FontWeight.bold),
+              ),
+              Text(
+                '${request.reviewerEmail}',
+                style: TextStyle(color: kPrimaryColor),
+              ),
+            ],
+          ),
+        ],
         SizedBox(height: kDefaultPadding),
         if (request.systemNameToAdd != null) ...[
           sectionTitle('Requested system details'),
@@ -91,7 +107,7 @@ class _RequestDetailsDialogState extends State<RequestDetailsDialog> {
         SizedBox(height: kDefaultPadding / 3),
         Expanded(child: Text('${request.requestDescription}')),
       ],
-      finishButtonTitle: 'Mark as reviewed',
+      finishButtonTitle: (request.reviewed) ? null : 'Mark as reviewed',
       onFinish: (!request.reviewed) ? () => widget.onRequestReviewed() : null,
     );
   }

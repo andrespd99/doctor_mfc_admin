@@ -1,3 +1,4 @@
+import 'package:doctor_mfc_admin/services/mfc_auth_service.dart';
 import 'package:doctor_mfc_admin/widgets/future_loading_indicator.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -11,6 +12,7 @@ import 'package:doctor_mfc_admin/models/user_request.dart';
 import 'package:doctor_mfc_admin/widgets/body_template.dart';
 import 'package:doctor_mfc_admin/src/request_details_dialog.dart';
 import 'package:doctor_mfc_admin/widgets/custom_loading_indicator.dart';
+import 'package:provider/provider.dart';
 
 class UserRequestsPage extends StatefulWidget {
   UserRequestsPage({Key? key}) : super(key: key);
@@ -223,11 +225,17 @@ class _UserRequestsPageState extends State<UserRequestsPage> {
       builder: (context) => RequestDetailsDialog(
         request: request,
         onRequestReviewed: () {
+          String reviewerEmail =
+              Provider.of<MFCAuthService>(context, listen: false).user!.email!;
+
+          request.reviewerEmail = reviewerEmail;
           futureLoadingIndicator(
             context,
             Database().setRequestAsReviewed(request),
-          ).then((value) => Navigator.pop(context));
-          setState(() {});
+          ).then((value) {
+            Navigator.pop(context);
+            setState(() {});
+          });
         },
       ),
     );

@@ -5,9 +5,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 
 class MFCAuthService {
   FirebaseAuth _auth = FirebaseAuth.instance;
-  User? user = FirebaseAuth.instance.currentUser;
+  User? get user => FirebaseAuth.instance.currentUser;
 
-  Stream<User?> userStream() => _auth.authStateChanges();
+  Stream<User?> userStream() => _auth.authStateChanges().asBroadcastStream();
 
   /// Future to sign user in the application. Returns a [String] if it finish with an error
   /// with the error message.
